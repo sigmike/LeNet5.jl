@@ -81,6 +81,56 @@ function test_s2()
     @test output[3, 5, 7] == sigmoid((input[3,9,13] + input[3,9,14] + input[3,10,13] + input[3,10,14]) * s2.coefficient + s2.bias)
 end
 
+type C3FeatureMap
+    input_map_indexes
+    weights
+    bias
+end
+
+type C3
+    feature_maps
+end
+function C3()
+    maps = Array(C3FeatureMap, (16))
+    index_maps = { 
+        [0, 1, 2],
+        [1, 2, 3],
+        [2, 3, 4],
+        [3, 4, 5],
+        [0, 4, 5],
+        [0, 1, 5],
+        [0, 1, 2, 3],
+        [1, 2, 3, 4],
+        [2, 3, 4, 5],
+        [0, 3, 4, 5],
+        [0, 1, 4, 5],
+        [0, 1, 2, 5],
+        [0, 1, 3, 4],
+        [1, 2, 4, 5],
+        [0, 2, 3, 5],
+        [0, 1, 2, 3, 4, 5],
+    }
+    for i in 1:size(index_maps)[1]
+        index_map = index_maps[i] + 1
+        map = C3FeatureMap(index_map, random_weight(5*5, length(index_map), 5, 5), random_weight(5*5))
+        maps[i] = map 
+    end
+    C3(maps)
+end
+function parameters(layer::C3)
+    result = {}
+    for map in layer.feature_maps
+        append!(result, [map.weights..., map.bias])
+    end
+    result
+end
+
+function test_c3()
+    c3 = C3()
+    println(size(parameters(c3)))
+    @test size(parameters(c3)) == (1516,)
+end
+
 type NeuralNetwork
     c1
     s2
@@ -100,6 +150,13 @@ function test_lenet5()
 
     output = run(lenet5, input)
     @test output == run(lenet5.s2, run(lenet5.c1, input))
+end
+
+function test_all()
+    test_c1()
+    test_s2()
+    test_c3()
+    test_lenet5()
 end
 
 end
