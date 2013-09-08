@@ -39,12 +39,15 @@ function run(layer::C1, input)
     output
 end
 
+parameters(c1::C1) = [c1.weights..., c1.biases...]
+
 function test_c1()
     srand(123)
     input = rand(32,32)
     c1 = C1()
     @test valid_weight(c1.weights, 32*32)
     @test valid_weight(c1.biases, 32*32)
+    @test size(parameters(c1)) == (156,)
 
     output = run(c1, input)
     @test size(output) == (6,28,28)
@@ -53,32 +56,34 @@ function test_c1()
 end
 
 type S2
-    coefficient
-    bias
+    coefficients
+    biases
 end
-S2() = S2(random_weight(28*28), random_weight(28*28))
+S2() = S2(random_weight(28*28,6), random_weight(28*28,6))
 
 function run(layer::S2, input)
     output = zeros(6, 14, 14)
     for f in 1:6, i in 1:14, j in 1:14
         i2 = i*2-1
         j2 = j*2-1
-        output[f, i, j] = sigmoid((input[f, i2, j2] + input[f, i2+1, j2] + input[f, i2, j2+1] + input[f, i2+1, j2+1]) * layer.coefficient + layer.bias)
+        output[f, i, j] = sigmoid((input[f, i2, j2] + input[f, i2+1, j2] + input[f, i2, j2+1] + input[f, i2+1, j2+1]) * layer.coefficients[f] + layer.biases[f])
     end
     output
 end
+parameters(s2::S2) = [s2.coefficients..., s2.biases...]
 
 function test_s2()
     srand(123)
     input = rand(6, 28,28)
     s2 = S2()
-    @test valid_weight(s2.coefficient, 28*28)
-    @test valid_weight(s2.bias, 28*28)
+    @test valid_weight(s2.coefficients, 28*28)
+    @test valid_weight(s2.biases, 28*28)
+    @test size(parameters(s2)) == (12,)
 
     output = run(s2, input)
     @test size(output) == (6, 14, 14)
-    @test output[1, 1, 1] == sigmoid((input[1,1,1] + input[1,1,2] + input[1,2,1] + input[1,2,2]) * s2.coefficient + s2.bias)
-    @test output[3, 5, 7] == sigmoid((input[3,9,13] + input[3,9,14] + input[3,10,13] + input[3,10,14]) * s2.coefficient + s2.bias)
+    @test output[1, 1, 1] == sigmoid((input[1,1,1] + input[1,1,2] + input[1,2,1] + input[1,2,2]) * s2.coefficients[1] + s2.biases[1])
+    @test output[3, 5, 7] == sigmoid((input[3,9,13] + input[3,9,14] + input[3,10,13] + input[3,10,14]) * s2.coefficients[3] + s2.biases[3])
 end
 
 type C3FeatureMap
