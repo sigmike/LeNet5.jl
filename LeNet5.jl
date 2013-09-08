@@ -6,6 +6,7 @@ type C1
     weights
     biases
 end
+C1() = C1(random_weight(32*32, 6, 5,5), random_weight(32*32, 6))
 
 function run(layer::C1, input)
     @assert size(input) == (32,32)
@@ -32,7 +33,9 @@ end
 function test_c1()
     srand(123)
     input = rand(32,32)
-    c1 = C1(rand(6, 5,5), rand(6))
+    c1 = C1()
+    @test valid_weight(c1.weights, 32*32)
+    @test valid_weight(c1.biases, 32*32)
 
     output = run(c1, input)
     @test size(output) == (6,28,28)
@@ -44,6 +47,11 @@ type S2
     coefficient
     bias
 end
+
+random_weight(inputs) = (rand() * 2 - 1) * 2.4 / inputs
+random_weight(inputs, size...) = (rand(size...) .* 2 - 1) .* 2.4 ./ inputs
+
+S2() = S2(random_weight(28*28), random_weight(28*28))
 
 function run(layer::S2, input)
     output = zeros(6, 14, 14)
@@ -57,11 +65,15 @@ end
 
 sigmoid(x) = 1 / (1 + e^-x)
 
+valid_weight(w::Number, inputs) = (max = 2.4/inputs; w <= max && w >= -max)
+valid_weight(w::Array, inputs) = (max = 2.4/inputs; all((x) -> valid_weight(x, inputs), w) && abs(std(w) - max / 2) <= 0.01 )
 
 function test_s2()
     srand(123)
     input = rand(6, 28,28)
-    s2 = S2(rand(), rand())
+    s2 = S2()
+    @test valid_weight(s2.coefficient, 28*28)
+    @test valid_weight(s2.bias, 28*28)
 
     output = run(s2, input)
     @test size(output) == (6, 14, 14)
