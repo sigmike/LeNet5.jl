@@ -2,6 +2,24 @@ module LeNet5
 
 using Base.Test
 
+# lecun-98 p.41
+random_weight(inputs) = (rand() * 2 - 1) * 2.4 / inputs
+random_weight(inputs, size...) = (rand(size...) .* 2 - 1) .* 2.4 ./ inputs
+valid_weight(w::Number, inputs) = (max = 2.4/inputs; w <= max && w >= -max)
+valid_weight(w::Array, inputs) = (max = 2.4/inputs; all((x) -> valid_weight(x, inputs), w) && abs(std(w) - max / 2) <= 0.01 )
+
+# lecun-98 p.41
+function squash(a)
+    A = 1.7159
+    S = 2 / 3
+    A * tanh(S * a)
+end
+@test_approx_eq_eps 1.0 squash(1) 1e-5
+@test_approx_eq_eps -1.0 squash(-1) 1e-5
+
+sigmoid(x) = 1 / (1 + e^-x)
+
+
 type C1
     weights
     biases
@@ -21,15 +39,6 @@ function run(layer::C1, input)
     output
 end
 
-# lecun-98 p.41
-function squash(a)
-    A = 1.7159
-    S = 2 / 3
-    A * tanh(S * a)
-end
-@test_approx_eq_eps 1.0 squash(1) 1e-5
-@test_approx_eq_eps -1.0 squash(-1) 1e-5
-
 function test_c1()
     srand(123)
     input = rand(32,32)
@@ -47,10 +56,6 @@ type S2
     coefficient
     bias
 end
-
-random_weight(inputs) = (rand() * 2 - 1) * 2.4 / inputs
-random_weight(inputs, size...) = (rand(size...) .* 2 - 1) .* 2.4 ./ inputs
-
 S2() = S2(random_weight(28*28), random_weight(28*28))
 
 function run(layer::S2, input)
@@ -62,11 +67,6 @@ function run(layer::S2, input)
     end
     output
 end
-
-sigmoid(x) = 1 / (1 + e^-x)
-
-valid_weight(w::Number, inputs) = (max = 2.4/inputs; w <= max && w >= -max)
-valid_weight(w::Array, inputs) = (max = 2.4/inputs; all((x) -> valid_weight(x, inputs), w) && abs(std(w) - max / 2) <= 0.01 )
 
 function test_s2()
     srand(123)
