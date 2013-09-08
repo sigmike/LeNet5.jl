@@ -40,5 +40,23 @@ function test_c1()
     @test output[3, 5, 2] == squash(sum(input[5:9, 2:6] .* c1.weights[3]) + c1.biases[3])
 end
 
+type S2
+    coefficient
+    bias
+end
+
+function run(layer::S2, input)
+    output = zeros(6, 14, 14)
+end
+
+function test_s2()
+    srand(123)
+    input = rand(28,28)
+    s2 = S2(rand(), rand())
+
+    output = run(s2, input)
+    @test size(output) == (6, 14, 14)
+end
+
 end
 
