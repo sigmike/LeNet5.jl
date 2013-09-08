@@ -81,5 +81,25 @@ function test_s2()
     @test output[3, 5, 7] == sigmoid((input[3,9,13] + input[3,9,14] + input[3,10,13] + input[3,10,14]) * s2.coefficient + s2.bias)
 end
 
+type NeuralNetwork
+    c1
+    s2
+end
+NeuralNetwork() = NeuralNetwork(C1(), S2())
+
+function run(network::NeuralNetwork, input)
+    output = run(network.c1, input)
+    output = run(network.s2, output)
+    output
 end
 
+function test_lenet5()
+    srand(123)
+    input = rand(32, 32)
+    lenet5 = NeuralNetwork()
+
+    output = run(lenet5, input)
+    @test output == run(lenet5.s2, run(lenet5.c1, input))
+end
+
+end
