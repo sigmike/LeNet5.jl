@@ -47,15 +47,26 @@ end
 
 function run(layer::S2, input)
     output = zeros(6, 14, 14)
+    for f in 1:6, i in 1:14, j in 1:14
+        i2 = i*2-1
+        j2 = j*2-1
+        output[f, i, j] = sigmoid((input[f, i2, j2] + input[f, i2+1, j2] + input[f, i2, j2+1] + input[f, i2+1, j2+1]) * layer.coefficient + layer.bias)
+    end
+    output
 end
+
+sigmoid(x) = 1 / (1 + e^-x)
+
 
 function test_s2()
     srand(123)
-    input = rand(28,28)
+    input = rand(6, 28,28)
     s2 = S2(rand(), rand())
 
     output = run(s2, input)
     @test size(output) == (6, 14, 14)
+    @test output[1, 1, 1] == sigmoid((input[1,1,1] + input[1,1,2] + input[1,2,1] + input[1,2,2]) * s2.coefficient + s2.bias)
+    @test output[3, 5, 7] == sigmoid((input[3,9,13] + input[3,9,14] + input[3,10,13] + input[3,10,14]) * s2.coefficient + s2.bias)
 end
 
 end
