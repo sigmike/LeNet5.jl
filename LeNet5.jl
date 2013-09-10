@@ -129,11 +129,28 @@ function parameters(layer::C3)
     end
     result
 end
+function run(layer::C3, input)
+    @assert size(input) == (6, 14, 14)
+    output = zeros(16, 10, 10)
+    for feature_map in 1:16
+        for i in 1:10
+            for j in 1:10
+                output[feature_map, i, j] = 0
+            end
+        end
+    end
+    output
+end
 
 function test_c3()
     c3 = C3()
     println(size(parameters(c3)))
     @test size(parameters(c3)) == (1516,)
+
+    input = rand(6, 14, 14)
+    output = run(c3, input)
+
+    @test size(output) == (16, 10, 10)
 end
 
 type NeuralNetwork
