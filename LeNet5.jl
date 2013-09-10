@@ -132,10 +132,14 @@ end
 function run(layer::C3, input)
     @assert size(input) == (6, 14, 14)
     output = zeros(16, 10, 10)
-    for feature_map in 1:16
+    for feature_map_index in 1:16
+        feature_map = layer.feature_maps[feature_map_index]
         for i in 1:10
             for j in 1:10
-                output[feature_map, i, j] = 0
+                for input_map_index in feature_map.input_map_indexes
+                    output[feature_map_index, i, j] += sum(input[input_map_index, i:i+5-1, j:j+5-1] .* feature_map.weights)
+                end
+                output[feature_map_index, i, j] = squash(output[feature_map_index, i, j] + feature_map.bias)
             end
         end
     end
@@ -151,6 +155,17 @@ function test_c3()
     output = run(c3, input)
 
     @test size(output) == (16, 10, 10)
+    @test output[1, 1, 1] == squash(
+        sum(input[1, 1:5, 1:5] .* c3.feature_maps[1].weights) +
+        sum(input[2, 1:5, 1:5] .* c3.feature_maps[1].weights) +
+        sum(input[3, 1:5, 1:5] .* c3.feature_maps[1].weights) +
+        c3.feature_maps[1].bias)
+    @test output[8, 3, 5] == squash(
+        sum(input[2, 3:7, 5:9] .* c3.feature_maps[8].weights) +
+        sum(input[3, 3:7, 5:9] .* c3.feature_maps[8].weights) +
+        sum(input[4, 3:7, 5:9] .* c3.feature_maps[8].weights) +
+        sum(input[5, 3:7, 5:9] .* c3.feature_maps[8].weights) +
+        c3.feature_maps[8].bias)
 end
 
 type NeuralNetwork
