@@ -6,7 +6,7 @@ using Base.Test
 random_weight(inputs) = (rand() * 2 - 1) * 2.4 / inputs
 random_weight(inputs, size...) = (rand(size...) .* 2 - 1) .* 2.4 ./ inputs
 valid_weight(w::Number, inputs) = (max = 2.4/inputs; w <= max && w >= -max)
-valid_weight(w::Array, inputs) = (max = 2.4/inputs; all((x) -> valid_weight(x, inputs), w) && abs(std(w) - max / 2) <= 0.01 )
+valid_weight(w::Array, inputs) = (max = 2.4/inputs; all((x) -> valid_weight(x, inputs), w) && abs(std(w) - max / 2) <= 0.1 )
 
 # lecun-98 p.41
 function squash(a)
@@ -84,6 +84,37 @@ function test_s2()
     @test size(output) == (6, 14, 14)
     @test output[1, 1, 1] == sigmoid((input[1,1,1] + input[1,1,2] + input[1,2,1] + input[1,2,2]) * s2.coefficients[1] + s2.biases[1])
     @test output[3, 5, 7] == sigmoid((input[3,9,13] + input[3,9,14] + input[3,10,13] + input[3,10,14]) * s2.coefficients[3] + s2.biases[3])
+end
+
+type S4
+    coefficients
+    biases
+end
+S4() = S4(random_weight(2*2,16), random_weight(2*2,16))
+
+function run(layer::S4, input)
+    output = zeros(16, 5, 5)
+    for f in 1:16, i in 1:5, j in 1:5
+        i2 = i*2-1
+        j2 = j*2-1
+        output[f, i, j] = sigmoid((input[f, i2, j2] + input[f, i2+1, j2] + input[f, i2, j2+1] + input[f, i2+1, j2+1]) * layer.coefficients[f] + layer.biases[f])
+    end
+    output
+end
+parameters(s4::S4) = [s4.coefficients..., s4.biases...]
+
+function test_s4()
+    srand(123)
+    input = rand(16,10,10)
+    layer = S4()
+    @test valid_weight(layer.coefficients, 2*2)
+    @test valid_weight(layer.biases, 2*2)
+    @test size(parameters(layer)) == (32,)
+
+    output = run(layer, input)
+    @test size(output) == (16, 5, 5)
+    @test output[1, 1, 1] == sigmoid((input[1,1,1] + input[1,1,2] + input[1,2,1] + input[1,2,2]) * layer.coefficients[1] + layer.biases[1])
+    @test output[3, 5, 2] == sigmoid((input[3,9,3] + input[3,9,4] + input[3,10,3] + input[3,10,4]) * layer.coefficients[3] + layer.biases[3])
 end
 
 type C3FeatureMap
@@ -193,6 +224,7 @@ function test_all()
     test_c1()
     test_s2()
     test_c3()
+    test_s4()
     test_lenet5()
 end
 
