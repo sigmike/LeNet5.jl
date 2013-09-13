@@ -86,37 +86,6 @@ function test_s2()
     @test output[3, 5, 7] == sigmoid((input[3,9,13] + input[3,9,14] + input[3,10,13] + input[3,10,14]) * s2.coefficients[3] + s2.biases[3])
 end
 
-type S4
-    coefficients
-    biases
-end
-S4() = S4(random_weight(2*2,16), random_weight(2*2,16))
-
-function run(layer::S4, input)
-    output = zeros(16, 5, 5)
-    for f in 1:16, i in 1:5, j in 1:5
-        i2 = i*2-1
-        j2 = j*2-1
-        output[f, i, j] = sigmoid((input[f, i2, j2] + input[f, i2+1, j2] + input[f, i2, j2+1] + input[f, i2+1, j2+1]) * layer.coefficients[f] + layer.biases[f])
-    end
-    output
-end
-parameters(s4::S4) = [s4.coefficients..., s4.biases...]
-
-function test_s4()
-    srand(123)
-    input = rand(16,10,10)
-    layer = S4()
-    @test valid_weight(layer.coefficients, 2*2)
-    @test valid_weight(layer.biases, 2*2)
-    @test size(parameters(layer)) == (32,)
-
-    output = run(layer, input)
-    @test size(output) == (16, 5, 5)
-    @test output[1, 1, 1] == sigmoid((input[1,1,1] + input[1,1,2] + input[1,2,1] + input[1,2,2]) * layer.coefficients[1] + layer.biases[1])
-    @test output[3, 5, 2] == sigmoid((input[3,9,3] + input[3,9,4] + input[3,10,3] + input[3,10,4]) * layer.coefficients[3] + layer.biases[3])
-end
-
 type C3FeatureMap
     input_map_indexes
     weights
@@ -197,6 +166,37 @@ function test_c3()
         sum(input[4, 3:7, 5:9] .* c3.feature_maps[8].weights) +
         sum(input[5, 3:7, 5:9] .* c3.feature_maps[8].weights) +
         c3.feature_maps[8].bias)
+end
+
+type S4
+    coefficients
+    biases
+end
+S4() = S4(random_weight(2*2,16), random_weight(2*2,16))
+
+function run(layer::S4, input)
+    output = zeros(16, 5, 5)
+    for f in 1:16, i in 1:5, j in 1:5
+        i2 = i*2-1
+        j2 = j*2-1
+        output[f, i, j] = sigmoid((input[f, i2, j2] + input[f, i2+1, j2] + input[f, i2, j2+1] + input[f, i2+1, j2+1]) * layer.coefficients[f] + layer.biases[f])
+    end
+    output
+end
+parameters(s4::S4) = [s4.coefficients..., s4.biases...]
+
+function test_s4()
+    srand(123)
+    input = rand(16,10,10)
+    layer = S4()
+    @test valid_weight(layer.coefficients, 2*2)
+    @test valid_weight(layer.biases, 2*2)
+    @test size(parameters(layer)) == (32,)
+
+    output = run(layer, input)
+    @test size(output) == (16, 5, 5)
+    @test output[1, 1, 1] == sigmoid((input[1,1,1] + input[1,1,2] + input[1,2,1] + input[1,2,2]) * layer.coefficients[1] + layer.biases[1])
+    @test output[3, 5, 2] == sigmoid((input[3,9,3] + input[3,9,4] + input[3,10,3] + input[3,10,4]) * layer.coefficients[3] + layer.biases[3])
 end
 
 type NeuralNetwork
