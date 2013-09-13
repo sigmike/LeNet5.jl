@@ -200,11 +200,38 @@ function test_s4()
     @test output[3, 5, 2] == sigmoid((input[3,9,3] + input[3,9,4] + input[3,10,3] + input[3,10,4]) * layer.coefficients[3] + layer.biases[3])
 end
 
+type C5FeatureMap
+    weights
+    bias
+end
+
 type C5
+    feature_maps
+end
+function C5()
+    maps = Array(C5FeatureMap, (120))
+    for i in 1:120
+        map = C5FeatureMap(random_weight(5*5, 16, 5, 5), random_weight(5*5))
+        maps[i] = map 
+    end
+    C5(maps)
 end
 
 function run(layer::C5, input)
-    rand(120, 1, 1)
+    @assert size(input) == (16, 5, 5)
+    output = zeros(120, 1, 1)
+    for feature_map_index in 1:120
+        feature_map = layer.feature_maps[feature_map_index]
+        for i in 1:1
+            for j in 1:1
+                for input_index in 1:16
+                    output[feature_map_index, i, j] += sum(input[input_index, i:i+5-1, j:j+5-1] .* feature_map.weights[input_index, 1:5, 1:5])
+                end
+                output[feature_map_index, i, j] = squash(output[feature_map_index, i, j] + feature_map.bias)
+            end
+        end
+    end
+    output
 end
 
 function test_c5()
@@ -214,6 +241,9 @@ function test_c5()
 
     output = run(layer, input)
     @test size(output) == (120,1,1)
+    @test output[1, 1, 1] == squash(
+        sum(input[1:16, 1:5, 1:5] .* layer.feature_maps[1].weights[1:16, 1:5, 1:5]) +
+        layer.feature_maps[1].bias)
 end
 
 type NeuralNetwork
