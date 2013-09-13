@@ -216,6 +216,13 @@ function C5()
     end
     C5(maps)
 end
+function parameters(layer::C5)
+    result = {}
+    for map in layer.feature_maps
+        append!(result, [map.weights..., map.bias])
+    end
+    result
+end
 
 function run(layer::C5, input)
     @assert size(input) == (16, 5, 5)
@@ -238,6 +245,7 @@ function test_c5()
     srand(1223)
     input = rand(16, 5, 5)
     layer = C5()
+    @test length(parameters(layer)) == 48120
 
     output = run(layer, input)
     @test size(output) == (120,1,1)
