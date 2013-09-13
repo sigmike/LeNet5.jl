@@ -199,6 +199,22 @@ function test_s4()
     @test output[3, 5, 2] == sigmoid((input[3,9,3] + input[3,9,4] + input[3,10,3] + input[3,10,4]) * layer.coefficients[3] + layer.biases[3])
 end
 
+type C5
+end
+
+function run(layer::C5, input)
+    rand(120, 1, 1)
+end
+
+function test_c5()
+    srand(123)
+    input = rand(16, 5, 5)
+    layer = C5()
+
+    output = run(layer, input)
+    @test size(output) == (120,1,1)
+end
+
 type NeuralNetwork
     c1
     s2
@@ -225,6 +241,7 @@ function test_all()
     test_s2()
     test_c3()
     test_s4()
+    test_c5()
     test_lenet5()
 end
 
