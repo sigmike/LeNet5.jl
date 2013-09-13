@@ -136,8 +136,9 @@ function run(layer::C3, input)
         feature_map = layer.feature_maps[feature_map_index]
         for i in 1:10
             for j in 1:10
-                for input_map_index in feature_map.input_map_indexes
-                    output[feature_map_index, i, j] += sum(input[input_map_index, i:i+5-1, j:j+5-1] .* feature_map.weights)
+                for input_index in 1:length(feature_map.input_map_indexes)
+                    input_map_index = feature_map.input_map_indexes[input_index]
+                    output[feature_map_index, i, j] += sum(input[input_map_index, i:i+5-1, j:j+5-1] .* feature_map.weights[input_index, 1:5, 1:5])
                 end
                 output[feature_map_index, i, j] = squash(output[feature_map_index, i, j] + feature_map.bias)
             end
@@ -156,15 +157,15 @@ function test_c3()
 
     @test size(output) == (16, 10, 10)
     @test output[1, 1, 1] == squash(
-        sum(input[1, 1:5, 1:5] .* c3.feature_maps[1].weights) +
-        sum(input[2, 1:5, 1:5] .* c3.feature_maps[1].weights) +
-        sum(input[3, 1:5, 1:5] .* c3.feature_maps[1].weights) +
+        sum(input[1, 1:5, 1:5] .* c3.feature_maps[1].weights[1, 1:5, 1:5]) +
+        sum(input[2, 1:5, 1:5] .* c3.feature_maps[1].weights[2, 1:5, 1:5]) +
+        sum(input[3, 1:5, 1:5] .* c3.feature_maps[1].weights[3, 1:5, 1:5]) +
         c3.feature_maps[1].bias)
     @test output[8, 3, 5] == squash(
-        sum(input[2, 3:7, 5:9] .* c3.feature_maps[8].weights) +
-        sum(input[3, 3:7, 5:9] .* c3.feature_maps[8].weights) +
-        sum(input[4, 3:7, 5:9] .* c3.feature_maps[8].weights) +
-        sum(input[5, 3:7, 5:9] .* c3.feature_maps[8].weights) +
+        sum(input[2, 3:7, 5:9] .* c3.feature_maps[8].weights[1, 1:5, 1:5]) +
+        sum(input[3, 3:7, 5:9] .* c3.feature_maps[8].weights[2, 1:5, 1:5]) +
+        sum(input[4, 3:7, 5:9] .* c3.feature_maps[8].weights[3, 1:5, 1:5]) +
+        sum(input[5, 3:7, 5:9] .* c3.feature_maps[8].weights[4, 1:5, 1:5]) +
         c3.feature_maps[8].bias)
 end
 
