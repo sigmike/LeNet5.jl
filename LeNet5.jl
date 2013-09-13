@@ -209,7 +209,7 @@ type C5
     feature_maps
 end
 function C5()
-    maps = Array(C5FeatureMap, (120))
+    maps = Array(C5FeatureMap, (120,))
     for i in 1:120
         map = C5FeatureMap(random_weight(5*5, 16, 5, 5), random_weight(5*5))
         maps[i] = map 
@@ -235,15 +235,14 @@ function run(layer::C5, input)
 end
 
 function test_c5()
-    srand(123)
+    srand(1223)
     input = rand(16, 5, 5)
     layer = C5()
 
     output = run(layer, input)
     @test size(output) == (120,1,1)
-    @test output[1, 1, 1] == squash(
-        sum(input[1:16, 1:5, 1:5] .* layer.feature_maps[1].weights[1:16, 1:5, 1:5]) +
-        layer.feature_maps[1].bias)
+    @test_approx_eq_eps output[1, 1, 1] squash(sum(input .* layer.feature_maps[1].weights) + layer.feature_maps[1].bias) 1e-10
+    @test_approx_eq_eps output[75, 1, 1] squash(sum(input .* layer.feature_maps[75].weights) + layer.feature_maps[75].bias) 1e-10
 end
 
 type NeuralNetwork
