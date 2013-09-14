@@ -253,6 +253,22 @@ function test_c5()
     @test_approx_eq_eps output[75, 1, 1] squash(sum(input .* layer.feature_maps[75].weights) + layer.feature_maps[75].bias) 1e-10
 end
 
+type F6
+end
+
+function run(layer::F6, input)
+    zeros(84)
+end
+
+function test_f6()
+    srand(123)
+    input = rand(120,1,1)
+    layer = F6()
+
+    output = run(layer, input)
+    @test size(output) == (84,)
+end
+
 type NeuralNetwork
     c1
     s2
@@ -280,6 +296,7 @@ function test_all()
     test_c3()
     test_s4()
     test_c5()
+    test_f6()
     test_lenet5()
 end
 
