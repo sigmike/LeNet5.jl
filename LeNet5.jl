@@ -284,6 +284,32 @@ function test_f6()
     @test output[79] == squash(sum(input .* layer.weights[79]) + layer.biases[79])
 end
 
+type Output
+    weights
+end
+Output() = Output(rand(96, 84))
+
+function run(layer::Output, input)
+    output = zeros(96)
+    for i in 1:96
+        for j in 1:84
+            output[i] += ((input[j] - layer.weights[i,j]) .^ 2)
+        end
+    end
+    output
+end
+
+function test_output()
+    srand(123)
+    input = rand(84)
+    layer = Output()
+
+    output = run(layer, input)
+    @test size(output) == (96,)
+    @test_approx_eq_eps output[ 1] sum((input - reshape(layer.weights[ 1,:], 84)).^2) 1e-10
+    @test_approx_eq_eps output[21] sum((input - reshape(layer.weights[21,:], 84)).^2) 1e-10
+end
+
 type NeuralNetwork
     c1
     s2
@@ -312,6 +338,7 @@ function test_all()
     test_s4()
     test_c5()
     test_f6()
+    test_output()
     test_lenet5()
 end
 
