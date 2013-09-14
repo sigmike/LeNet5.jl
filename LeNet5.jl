@@ -333,12 +333,22 @@ end
 type NeuralNetwork
     c1
     s2
+    c3
+    s4
+    c5
+    f6
+    output
 end
-NeuralNetwork() = NeuralNetwork(C1(), S2())
+NeuralNetwork() = NeuralNetwork(C1(), S2(), C3(), S4(), C5(), F6(), Output())
 
 function run(input, network::NeuralNetwork)
     output = run(input, network.c1)
     output = run(output, network.s2)
+    output = run(output, network.c3)
+    output = run(output, network.s4)
+    output = run(output, network.c5)
+    output = run(output, network.f6)
+    output = run(output, network.output)
     output
 end
 
@@ -351,7 +361,15 @@ function test_lenet5()
     lenet5 = NeuralNetwork()
 
     output = run(input, lenet5)
-    @test output == (run(input, lenet5.c1) |> lenet5.s2)
+
+    expected_output = run(input, lenet5.c1)
+    expected_output = run(expected_output, lenet5.s2)
+    expected_output = run(expected_output, lenet5.c3)
+    expected_output = run(expected_output, lenet5.s4)
+    expected_output = run(expected_output, lenet5.c5)
+    expected_output = run(expected_output, lenet5.f6)
+    expected_output = run(expected_output, lenet5.output)
+    @test output == expected_output
 end
 
 function test_all()
