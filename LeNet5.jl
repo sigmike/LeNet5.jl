@@ -254,6 +254,13 @@ function test_c5()
 end
 
 type F6
+    weights
+    biases
+end
+F6() = F6(random_weight(120, 84, 120), random_weight(120, 84))
+
+function parameters(layer::F6)
+    [layer.weights..., layer.biases...]
 end
 
 function run(layer::F6, input)
@@ -264,6 +271,9 @@ function test_f6()
     srand(123)
     input = rand(120,1,1)
     layer = F6()
+    @test valid_weight(layer.weights, 120)
+    @test valid_weight(layer.biases, 120)
+    @test length(parameters(layer)) == 10164
 
     output = run(layer, input)
     @test size(output) == (84,)
