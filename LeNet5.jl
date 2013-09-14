@@ -294,9 +294,9 @@ function Output()
     weights = zeros(96, 12, 7)
 
     for i in 1:96
-        filename = "output_rbfs/$(lpad(i,3,'0')).png"
+        filename = "output_rbfs/$(lpad(i,3,'0')).ppm"
         image = imread(filename)
-        array = convert(Array, image)
+        array = convert(Array, image)[:,:,1]'
         for y in 1:size(array)[1]
             for x in 1:size(array)[2]
                 weights[i,y,x] = array[y, x]  == 0 ? 1 : -1
