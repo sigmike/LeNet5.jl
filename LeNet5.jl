@@ -18,8 +18,9 @@ end
 @test_approx_eq_eps -1.0 squash(-1) 1e-5
 @test_approx_eq_eps 0.140843782 squash(0.1234) 1e-5
 
+abstract Layer
 
-type C1
+type C1 <: Layer
     weights
     biases
 end
@@ -54,7 +55,7 @@ function test_c1()
     @test output[3, 5, 2] == squash(sum(input[5:9, 2:6] .* c1.weights[3]) + c1.biases[3])
 end
 
-type S2
+type S2 <: Layer
     coefficients
     biases
 end
@@ -91,7 +92,7 @@ type C3FeatureMap
     bias
 end
 
-type C3
+type C3 <: Layer
     feature_maps
 end
 function C3()
@@ -168,7 +169,7 @@ function test_c3()
         c3.feature_maps[8].bias)
 end
 
-type S4
+type S4 <: Layer
     coefficients
     biases
 end
@@ -204,7 +205,7 @@ type C5FeatureMap
     bias
 end
 
-type C5
+type C5 <: Layer
     feature_maps
 end
 function C5()
@@ -252,7 +253,7 @@ function test_c5()
     @test_approx_eq_eps output[75, 1, 1] squash(sum(input .* layer.feature_maps[75].weights) + layer.feature_maps[75].bias) 1e-10
 end
 
-type F6
+type F6 <: Layer
     weights
     biases
 end
@@ -284,7 +285,7 @@ function test_f6()
     @test output[79] == squash(sum(input .* layer.weights[79]) + layer.biases[79])
 end
 
-type Output
+type Output <: Layer
     weights
 end
 
@@ -330,7 +331,7 @@ function test_output()
     @test_approx_eq_eps output[21] sum((input - reshape(layer.weights[21,:,:], 84)).^2) 1e-10
 end
 
-type NeuralNetwork
+type NeuralNetwork <: Layer
     c1
     s2
     c3
@@ -353,7 +354,7 @@ function run(input, network::NeuralNetwork)
 end
 
 import Base.|>
-(|>)(input, layer::S2) = run(input, layer)
+(|>)(input, layer::Layer) = run(input, layer)
 
 function test_lenet5()
     srand(123)
