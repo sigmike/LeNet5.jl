@@ -287,7 +287,25 @@ end
 type Output
     weights
 end
-Output() = Output(rand(96, 84))
+
+using Images
+
+function Output()
+    weights = zeros(96, 12, 7)
+
+    for i in 1:96
+        filename = "output_rbfs/$(lpad(i,3,'0')).png"
+        image = imread(filename)
+        array = convert(Array, image)
+        for y in 1:size(array)[1]
+            for x in 1:size(array)[2]
+                weights[i,y,x] = array[y, x]  == 0 ? 1 : -1
+            end
+        end
+    end
+
+    Output(weights)
+end
 
 function run(layer::Output, input)
     output = zeros(96)
@@ -303,11 +321,13 @@ function test_output()
     srand(123)
     input = rand(84)
     layer = Output()
+    @test reshape(layer.weights[ 2, 1, :], 7) == [-1, -1, -1,  1,  1, -1, -1]
+    @test reshape(layer.weights[23, 9, :], 7) == [ 1,  1,  1, -1, -1,  1,  1]
 
     output = run(layer, input)
     @test size(output) == (96,)
-    @test_approx_eq_eps output[ 1] sum((input - reshape(layer.weights[ 1,:], 84)).^2) 1e-10
-    @test_approx_eq_eps output[21] sum((input - reshape(layer.weights[21,:], 84)).^2) 1e-10
+    @test_approx_eq_eps output[ 1] sum((input - reshape(layer.weights[ 1,:,:], 84)).^2) 1e-10
+    @test_approx_eq_eps output[21] sum((input - reshape(layer.weights[21,:,:], 84)).^2) 1e-10
 end
 
 type NeuralNetwork
