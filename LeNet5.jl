@@ -264,7 +264,11 @@ function parameters(layer::F6)
 end
 
 function run(layer::F6, input)
-    zeros(84)
+    output = zeros(84)
+    for i in 1:84
+        output[i] = squash(sum(input .* layer.weights[i]) + layer.biases[i])
+    end
+    output
 end
 
 function test_f6()
@@ -277,6 +281,8 @@ function test_f6()
 
     output = run(layer, input)
     @test size(output) == (84,)
+    @test output[1] == squash(sum(input .* layer.weights[1]) + layer.biases[1])
+    @test output[79] == squash(sum(input .* layer.weights[79]) + layer.biases[79])
 end
 
 type NeuralNetwork
