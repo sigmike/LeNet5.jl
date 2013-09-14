@@ -18,8 +18,6 @@ end
 @test_approx_eq_eps -1.0 squash(-1) 1e-5
 @test_approx_eq_eps 0.140843782 squash(0.1234) 1e-5
 
-sigmoid(x) = 1 / (1 + e^-x)
-
 
 type C1
     weights
@@ -67,7 +65,7 @@ function run(layer::S2, input)
     for f in 1:6, i in 1:14, j in 1:14
         i2 = i*2-1
         j2 = j*2-1
-        output[f, i, j] = sigmoid((input[f, i2, j2] + input[f, i2+1, j2] + input[f, i2, j2+1] + input[f, i2+1, j2+1]) * layer.coefficients[f] + layer.biases[f])
+        output[f, i, j] = squash((input[f, i2, j2] + input[f, i2+1, j2] + input[f, i2, j2+1] + input[f, i2+1, j2+1]) * layer.coefficients[f] + layer.biases[f])
     end
     output
 end
@@ -83,8 +81,8 @@ function test_s2()
 
     output = run(s2, input)
     @test size(output) == (6, 14, 14)
-    @test output[1, 1, 1] == sigmoid((input[1,1,1] + input[1,1,2] + input[1,2,1] + input[1,2,2]) * s2.coefficients[1] + s2.biases[1])
-    @test output[3, 5, 7] == sigmoid((input[3,9,13] + input[3,9,14] + input[3,10,13] + input[3,10,14]) * s2.coefficients[3] + s2.biases[3])
+    @test output[1, 1, 1] == squash((input[1,1,1] + input[1,1,2] + input[1,2,1] + input[1,2,2]) * s2.coefficients[1] + s2.biases[1])
+    @test output[3, 5, 7] == squash((input[3,9,13] + input[3,9,14] + input[3,10,13] + input[3,10,14]) * s2.coefficients[3] + s2.biases[3])
 end
 
 type C3FeatureMap
@@ -181,7 +179,7 @@ function run(layer::S4, input)
     for f in 1:16, i in 1:5, j in 1:5
         i2 = i*2-1
         j2 = j*2-1
-        output[f, i, j] = sigmoid((input[f, i2, j2] + input[f, i2+1, j2] + input[f, i2, j2+1] + input[f, i2+1, j2+1]) * layer.coefficients[f] + layer.biases[f])
+        output[f, i, j] = squash((input[f, i2, j2] + input[f, i2+1, j2] + input[f, i2, j2+1] + input[f, i2+1, j2+1]) * layer.coefficients[f] + layer.biases[f])
     end
     output
 end
@@ -197,8 +195,8 @@ function test_s4()
 
     output = run(layer, input)
     @test size(output) == (16, 5, 5)
-    @test output[1, 1, 1] == sigmoid((input[1,1,1] + input[1,1,2] + input[1,2,1] + input[1,2,2]) * layer.coefficients[1] + layer.biases[1])
-    @test output[3, 5, 2] == sigmoid((input[3,9,3] + input[3,9,4] + input[3,10,3] + input[3,10,4]) * layer.coefficients[3] + layer.biases[3])
+    @test output[1, 1, 1] == squash((input[1,1,1] + input[1,1,2] + input[1,2,1] + input[1,2,2]) * layer.coefficients[1] + layer.biases[1])
+    @test output[3, 5, 2] == squash((input[3,9,3] + input[3,9,4] + input[3,10,3] + input[3,10,4]) * layer.coefficients[3] + layer.biases[3])
 end
 
 type C5FeatureMap
