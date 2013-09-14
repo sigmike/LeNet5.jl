@@ -383,6 +383,22 @@ function loss(outputs, desired_classes)
 end
 
 function test_loss()
+    training_samples = 2
+    network_outputs = ones(training_samples, 96)
+    desired_output_classes = [6, 87]
+    network_outputs[1, 6] = 0.1
+    network_outputs[1, 7] = 0.5
+    network_outputs[2, 87] = 0.5
+    network_outputs[2, 12] = 0.2
+
+    expected_error = 0.1
+    expected_error += 0.5
+    expected_error /= 2
+
+    @test_approx_eq_eps loss(network_outputs, desired_output_classes) expected_error 1e-10
+end
+
+function test_loss_generic()
     srand(123)
     training_samples = 6
     network_outputs = rand(training_samples, 96)
@@ -406,6 +422,7 @@ function test_all()
     test_output()
     test_lenet5()
     test_loss()
+    test_loss_generic()
 end
 
 end
