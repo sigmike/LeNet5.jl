@@ -372,6 +372,16 @@ function test_lenet5()
     @test output == expected_output
 end
 
+function loss(outputs, desired_classes)
+    training_samples = length(desired_classes)
+    @assert size(outputs)[1] == training_samples
+    errors = zeros(training_samples)
+    for i in 1:training_samples
+        errors[i] += outputs[i, desired_classes[i]]
+    end
+    mean(errors)
+end
+
 function test_loss()
     srand(123)
     training_samples = 6
