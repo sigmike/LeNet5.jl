@@ -8,7 +8,7 @@ random_weight(inputs, size...) = (rand(size...) .* 2 - 1) .* 2.4 ./ inputs
 valid_weight(w::Number, inputs) = (max = 2.4/inputs; w <= max && w >= -max)
 valid_weight(w::Array, inputs) = (max = 2.4/inputs; all((x) -> valid_weight(x, inputs), w) && abs(std(w) - max / 2) <= 0.1 )
 
-# lecun-98 p.41
+# lecun-98 p.8 and 41
 function squash(a)
     A = 1.7159
     S = 2 / 3
@@ -16,6 +16,7 @@ function squash(a)
 end
 @test_approx_eq_eps 1.0 squash(1) 1e-5
 @test_approx_eq_eps -1.0 squash(-1) 1e-5
+@test_approx_eq_eps 0.140843782 squash(0.1234) 1e-5
 
 sigmoid(x) = 1 / (1 + e^-x)
 
