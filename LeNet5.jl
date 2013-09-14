@@ -372,6 +372,20 @@ function test_lenet5()
     @test output == expected_output
 end
 
+function test_loss()
+    srand(123)
+    training_samples = 6
+    network_outputs = rand(training_samples, 96)
+    desired_output_classes = rand(1:96, training_samples)
+
+    expected_error = 0
+    for p in 1:training_samples
+        expected_error += network_outputs[p, desired_output_classes[p]]
+    end
+    expected_error /= training_samples
+    @test loss(network_outputs, desired_output_classes) == expected_error
+end
+
 function test_all()
     test_c1()
     test_s2()
@@ -381,6 +395,7 @@ function test_all()
     test_f6()
     test_output()
     test_lenet5()
+    test_loss()
 end
 
 end
