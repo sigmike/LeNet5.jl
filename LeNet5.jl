@@ -372,12 +372,16 @@ function test_lenet5()
     @test output == expected_output
 end
 
+exp_minus_J = exp(-5)
+
 function loss(outputs, desired_classes)
     training_samples = length(desired_classes)
     @assert size(outputs)[1] == training_samples
     errors = zeros(training_samples)
     for i in 1:training_samples
         errors[i] += outputs[i, desired_classes[i]]
+        exp_outputs = map((x) -> exp(-x), outputs[i,:])
+        errors[i] += log(exp_minus_J + sum(exp_outputs))
     end
     mean(errors)
 end
@@ -391,8 +395,8 @@ function test_loss()
     network_outputs[2, 87] = 0.5
     network_outputs[2, 12] = 0.2
 
-    expected_error = 0.1
-    expected_error += 0.5
+    expected_error = 0.1 + log(exp_minus_J + exp(-0.1) + exp(-0.5) + 94 * exp(-1))
+    expected_error += 0.5 + log(exp_minus_J + exp(-0.5) + exp(-0.2) + 94 * exp(-1))
     expected_error /= 2
 
     @test_approx_eq_eps loss(network_outputs, desired_output_classes) expected_error 1e-10
@@ -407,6 +411,7 @@ function test_loss_generic()
     expected_error = 0
     for p in 1:training_samples
         expected_error += network_outputs[p, desired_output_classes[p]]
+        expected_error += log(exp_minus_J + sum([exp(-output) for output in network_outputs[p,:]]))
     end
     expected_error /= training_samples
     @test loss(network_outputs, desired_output_classes) == expected_error
