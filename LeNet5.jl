@@ -25,7 +25,7 @@ type C1
 end
 C1() = C1(random_weight(32*32, 6, 5,5), random_weight(32*32, 6))
 
-function run(layer::C1, input)
+function run(input, layer::C1)
     @assert size(input) == (32,32)
     output = zeros(6,28,28)
     for feature_map in 1:6
@@ -48,7 +48,7 @@ function test_c1()
     @test valid_weight(c1.biases, 32*32)
     @test size(parameters(c1)) == (156,)
 
-    output = run(c1, input)
+    output = run(input, c1)
     @test size(output) == (6,28,28)
     @test output[1, 1, 1] == squash(sum(input[1:5, 1:5] .* c1.weights[1]) + c1.biases[1])
     @test output[3, 5, 2] == squash(sum(input[5:9, 2:6] .* c1.weights[3]) + c1.biases[3])
@@ -60,7 +60,7 @@ type S2
 end
 S2() = S2(random_weight(28*28,6), random_weight(28*28,6))
 
-function run(layer::S2, input)
+function run(input, layer::S2)
     output = zeros(6, 14, 14)
     for f in 1:6, i in 1:14, j in 1:14
         i2 = i*2-1
@@ -79,7 +79,7 @@ function test_s2()
     @test valid_weight(s2.biases, 28*28)
     @test size(parameters(s2)) == (12,)
 
-    output = run(s2, input)
+    output = run(input, s2)
     @test size(output) == (6, 14, 14)
     @test output[1, 1, 1] == squash((input[1,1,1] + input[1,1,2] + input[1,2,1] + input[1,2,2]) * s2.coefficients[1] + s2.biases[1])
     @test output[3, 5, 7] == squash((input[3,9,13] + input[3,9,14] + input[3,10,13] + input[3,10,14]) * s2.coefficients[3] + s2.biases[3])
@@ -128,7 +128,7 @@ function parameters(layer::C3)
     end
     result
 end
-function run(layer::C3, input)
+function run(input, layer::C3)
     @assert size(input) == (6, 14, 14)
     output = zeros(16, 10, 10)
     for feature_map_index in 1:16
@@ -152,7 +152,7 @@ function test_c3()
     @test size(parameters(c3)) == (1516,)
 
     input = rand(6, 14, 14)
-    output = run(c3, input)
+    output = run(input, c3)
 
     @test size(output) == (16, 10, 10)
     @test output[1, 1, 1] == squash(
@@ -174,7 +174,7 @@ type S4
 end
 S4() = S4(random_weight(2*2,16), random_weight(2*2,16))
 
-function run(layer::S4, input)
+function run(input, layer::S4)
     output = zeros(16, 5, 5)
     for f in 1:16, i in 1:5, j in 1:5
         i2 = i*2-1
@@ -193,7 +193,7 @@ function test_s4()
     @test valid_weight(layer.biases, 2*2)
     @test size(parameters(layer)) == (32,)
 
-    output = run(layer, input)
+    output = run(input, layer)
     @test size(output) == (16, 5, 5)
     @test output[1, 1, 1] == squash((input[1,1,1] + input[1,1,2] + input[1,2,1] + input[1,2,2]) * layer.coefficients[1] + layer.biases[1])
     @test output[3, 5, 2] == squash((input[3,9,3] + input[3,9,4] + input[3,10,3] + input[3,10,4]) * layer.coefficients[3] + layer.biases[3])
@@ -223,7 +223,7 @@ function parameters(layer::C5)
     result
 end
 
-function run(layer::C5, input)
+function run(input, layer::C5)
     @assert size(input) == (16, 5, 5)
     output = zeros(120, 1, 1)
     for feature_map_index in 1:120
@@ -246,7 +246,7 @@ function test_c5()
     layer = C5()
     @test length(parameters(layer)) == 48120
 
-    output = run(layer, input)
+    output = run(input, layer)
     @test size(output) == (120,1,1)
     @test_approx_eq_eps output[1, 1, 1] squash(sum(input .* layer.feature_maps[1].weights) + layer.feature_maps[1].bias) 1e-10
     @test_approx_eq_eps output[75, 1, 1] squash(sum(input .* layer.feature_maps[75].weights) + layer.feature_maps[75].bias) 1e-10
@@ -262,7 +262,7 @@ function parameters(layer::F6)
     [layer.weights..., layer.biases...]
 end
 
-function run(layer::F6, input)
+function run(input, layer::F6)
     output = zeros(84)
     for i in 1:84
         output[i] = squash(sum(input .* layer.weights[i]) + layer.biases[i])
@@ -278,7 +278,7 @@ function test_f6()
     @test valid_weight(layer.biases, 120)
     @test length(parameters(layer)) == 10164
 
-    output = run(layer, input)
+    output = run(input, layer)
     @test size(output) == (84,)
     @test output[1] == squash(sum(input .* layer.weights[1]) + layer.biases[1])
     @test output[79] == squash(sum(input .* layer.weights[79]) + layer.biases[79])
@@ -307,7 +307,7 @@ function Output()
     Output(weights)
 end
 
-function run(layer::Output, input)
+function run(input, layer::Output)
     output = zeros(96)
     for i in 1:96
         for j in 1:84
@@ -324,7 +324,7 @@ function test_output()
     @test reshape(layer.weights[ 2, 1, :], 7) == [-1, -1, -1,  1,  1, -1, -1]
     @test reshape(layer.weights[23, 9, :], 7) == [ 1,  1,  1, -1, -1,  1,  1]
 
-    output = run(layer, input)
+    output = run(input, layer)
     @test size(output) == (96,)
     @test_approx_eq_eps output[ 1] sum((input - reshape(layer.weights[ 1,:,:], 84)).^2) 1e-10
     @test_approx_eq_eps output[21] sum((input - reshape(layer.weights[21,:,:], 84)).^2) 1e-10
@@ -336,19 +336,22 @@ type NeuralNetwork
 end
 NeuralNetwork() = NeuralNetwork(C1(), S2())
 
-function run(network::NeuralNetwork, input)
-    output = run(network.c1, input)
-    output = run(network.s2, output)
+function run(input, network::NeuralNetwork)
+    output = run(input, network.c1)
+    output = run(output, network.s2)
     output
 end
+
+import Base.|>
+(|>)(input, layer::S2) = run(input, layer)
 
 function test_lenet5()
     srand(123)
     input = rand(32, 32)
     lenet5 = NeuralNetwork()
 
-    output = run(lenet5, input)
-    @test output == run(lenet5.s2, run(lenet5.c1, input))
+    output = run(input, lenet5)
+    @test output == (run(input, lenet5.c1) |> lenet5.s2)
 end
 
 function test_all()
