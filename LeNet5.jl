@@ -149,7 +149,6 @@ end
 
 function test_c3()
     c3 = C3()
-    println(size(parameters(c3)))
     @test size(parameters(c3)) == (1516,)
 
     input = rand(6, 14, 14)
