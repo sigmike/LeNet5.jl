@@ -6,7 +6,7 @@ using Base.Test
 random_weight(inputs) = (rand() * 2 - 1) * 2.4 / inputs
 random_weight(inputs, size...) = (rand(size...) .* 2 - 1) .* 2.4 ./ inputs
 valid_weight(w::Number, inputs) = (max = 2.4/inputs; w <= max && w >= -max)
-valid_weight(w::Array, inputs) = (max = 2.4/inputs; all((x) -> valid_weight(x, inputs), w) && abs(std(w) - max / 2) <= 0.1 )
+valid_weight(w::Array, inputs) = (max = 2.4/inputs; all((x) -> valid_weight(x, inputs), w) && abs(std(w) - max / 2) <= 0.2 )
 
 # lecun-98 p.8 and 41
 function squash(a)
@@ -24,7 +24,7 @@ type C1 <: Layer
     weights
     biases
 end
-C1() = C1(random_weight(32*32, 6, 5,5), random_weight(32*32, 6))
+C1() = C1(random_weight(5*5, 6, 5,5), random_weight(5*5, 6))
 
 function run(input, layer::C1)
     @assert size(input) == (32,32)
@@ -45,8 +45,8 @@ function test_c1()
     srand(123)
     input = rand(32,32)
     c1 = C1()
-    @test valid_weight(c1.weights, 32*32)
-    @test valid_weight(c1.biases, 32*32)
+    @test valid_weight(c1.weights, 5*5)
+    @test valid_weight(c1.biases, 5*5)
     @test size(parameters(c1)) == (156,)
 
     output = run(input, c1)
@@ -59,7 +59,7 @@ type S2 <: Layer
     coefficients
     biases
 end
-S2() = S2(random_weight(28*28,6), random_weight(28*28,6))
+S2() = S2(random_weight(2*2,6), random_weight(2*2,6))
 
 function run(input, layer::S2)
     output = zeros(6, 14, 14)
@@ -76,8 +76,8 @@ function test_s2()
     srand(123)
     input = rand(6, 28,28)
     s2 = S2()
-    @test valid_weight(s2.coefficients, 28*28)
-    @test valid_weight(s2.biases, 28*28)
+    @test valid_weight(s2.coefficients, 2*2)
+    @test valid_weight(s2.biases, 2*2)
     @test size(parameters(s2)) == (12,)
 
     output = run(input, s2)
@@ -117,7 +117,7 @@ function C3()
     }
     for i in 1:size(index_maps)[1]
         index_map = index_maps[i] + 1
-        map = C3FeatureMap(index_map, random_weight(5*5, length(index_map), 5, 5), random_weight(5*5))
+        map = C3FeatureMap(index_map, random_weight(length(index_map)*5*5, length(index_map), 5, 5), random_weight(length(index_map)*5*5))
         maps[i] = map 
     end
     C3(maps)
@@ -150,6 +150,8 @@ end
 function test_c3()
     c3 = C3()
     @test size(parameters(c3)) == (1516,)
+    @test valid_weight(c3.feature_maps[1].weights, 3*5*5)
+    @test valid_weight(c3.feature_maps[8].weights, 4*5*5)
 
     input = rand(6, 14, 14)
     output = run(input, c3)
@@ -210,7 +212,7 @@ end
 function C5()
     maps = Array(C5FeatureMap, (120,))
     for i in 1:120
-        map = C5FeatureMap(random_weight(5*5, 16, 5, 5), random_weight(5*5))
+        map = C5FeatureMap(random_weight(16*5*5, 16, 5, 5), random_weight(16*5*5))
         maps[i] = map 
     end
     C5(maps)
@@ -245,6 +247,8 @@ function test_c5()
     input = rand(16, 5, 5)
     layer = C5()
     @test length(parameters(layer)) == 48120
+    @test valid_weight(layer.feature_maps[1].weights, 16*5*5)
+    @test valid_weight(layer.feature_maps[75].weights, 16*5*5)
 
     output = run(input, layer)
     @test size(output) == (120,1,1)
