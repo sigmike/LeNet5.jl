@@ -425,7 +425,17 @@ function test_f6_backpropagation()
     srand(123)
 
     error = 5.0
-    layer = F6()
+    
+    input = rand(32, 32)
+    network = NeuralNetwork()
+
+    c1_output = run(input, lenet5.c1)
+    s2_output = run(c1_output, lenet5.s2)
+    c3_output = run(s2_output, lenet5.c3)
+    s4_output = run(c3_output, lenet5.s4)
+    c5_output = run(s4_output, lenet5.c5)
+    f6_output = run(c5_output, lenet5.f6)
+    network_output = run(expected_output, lenet5.output)
 
     tanh_derivative(x) = 1 - tanh(x)^2
     squash(x) = A * tanh(S * x)
@@ -434,6 +444,10 @@ function test_f6_backpropagation()
 
     input = rand(32, 32)
     desired_class = 25
+
+    neuron_index = 1
+    weight_index = 1
+    corresponding_input = c5_output[1,1,1]
 
     error = mean(training_costs)
     derivative(error, w) = derivative(error, output) * derivative(output, weighted_sum) * derivative(weighted_sum, w)
