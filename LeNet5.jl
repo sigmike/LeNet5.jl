@@ -421,91 +421,63 @@ function test_loss_generic()
     @test loss(network_outputs, desired_output_classes) == expected_error
 end
 
+function backpropagate(error, layer, output, learning_rate)
+end
+
 function test_f6_backpropagation()
     srand(123)
 
-    error = 5.0
-    
     input = rand(32, 32)
     network = NeuralNetwork()
 
-    c1_output = run(input, lenet5.c1)
-    s2_output = run(c1_output, lenet5.s2)
-    c3_output = run(s2_output, lenet5.c3)
-    s4_output = run(c3_output, lenet5.s4)
-    c5_output = run(s4_output, lenet5.c5)
-    f6_output = run(c5_output, lenet5.f6)
-    network_output = run(expected_output, lenet5.output)
+    c1_output = run(input, network.c1)
+    s2_output = run(c1_output, network.s2)
+    c3_output = run(s2_output, network.c3)
+    s4_output = run(c3_output, network.s4)
+    c5_output = run(s4_output, network.c5)
+    f6_output = run(c5_output, network.f6)
+    network_output = run(f6_output, network.output)
 
-    tanh_derivative(x) = 1 - tanh(x)^2
-    squash(x) = A * tanh(S * x)
-    squash_derivative(x) = A * S * tanh_derivative(S * x)
-    squash_derivative(x) = A * S * (1 - tanh(S * x)^2)
-
-    input = rand(32, 32)
     desired_class = 25
+    error = 5.0
+    learning_rate = 0.1 # should be per neuron
+    
+    # Error is calculated on a single training set. In the PDF the error is the average error of multiple training sets.
+    #
+    # Error derivative calculation:
+    # error = sum((f6_output - desired_class_weights).^2)
+    # derivative(error, w) = derivative(error, output) * derivative(output, weighted_sum) * derivative(weighted_sum, w)
+    #
+    # derivative(weighted_sum, w) = corresponding_input
+    # 
+    # output = squash(weighted_sum + bias)
+    # derivative(output, weighted_sum) = derivative(squash, full_sum) * derivative(full_sum, weighted_sum)
+    # derivative(full_sum, weighted_sum) = 1
+    # derivative(squash, x) = 1 - tanh(x)^2
+    # derivative(output, weighted_sum) = 1 - tanh(weighted_sum + bias)^2
+    #
+    # derivative(error, output) = derivative(mean, training_costs) * derivative(training_costs, output)
+    # derivative(error, f6_output) = sum(derivative((f6_output - desired_class_weights).^2, f6_output))
+    # derivative(error, f6_output) = sum(2(f6_output - desired_class_weights))
+    #
+    # derivative(error, w) = sum(2(f6_output - desired_class_weights)) * (1 - tanh(weighted_sum + bias)^2) * corresponding_input
 
+    layer = network.f6
     neuron_index = 1
     weight_index = 1
     corresponding_input = c5_output[1,1,1]
+    desired_class_weights = reshape(network.output.weights[desired_class,:,:], 84)
+    weighted_sum = sum(c5_output .* layer.weights[neuron_index,:])
+    bias = layer.biases[neuron_index]
 
-    error = mean(training_costs)
-    derivative(error, w) = derivative(error, output) * derivative(output, weighted_sum) * derivative(weighted_sum, w)
-    
-    derivative(weighted_sum, w) = corresponding_input
-    
-    output = squash(weighted_sum + bias)
-    derivative(output, weighted_sum) = derivative(squash, full_sum) * derivative(full_sum, weighted_sum)
-    derivative(full_sum, weighted_sum) = 1
-    derivative(squash, x) = 1 - tanh(x)^2
-    derivative(output, weighted_sum) = 1 - tanh(weighted_sum + bias)^2
+    weight_change = -learning_rate * sum(2(f6_output - desired_class_weights)) * (1 - tanh(weighted_sum + bias)^2) * corresponding_input
+   
 
-    derivative(error, output) = derivative(mean, training_costs) * derivative(training_costs, output)
-    #mean(training_costs) = sum(training_costs) / length(training_costs)
-    #derivative(mean, training_costs) = derivative(div,sum(derivative(training_costs))
-    #error = sum(training_costs) / length(training_costs)
-    #training_costs = 1/P *
-    #error = 1/P * sum(desired_class_cost
-    desired_class_weights = reshape(layer.weights[ 1,:,:], 84)
-    # dans le PDF l'erreur est calculée sur plusieurs samples, on n'en considère q'un ici
-    error = sum((f6_output - desired_class_weights).^2)
-    derivative(error, f6_output) = sum(derivative((f6_output - desired_class_weights).^2, f6_output))
-    derivative(error, f6_output) = sum(2(f6_output - desired_class_weights))
-
-    derivative(error, w) = sum(2(f6_output - desired_class_weights)) * (1 - tanh(weighted_sum + bias)^2) * corresponding_input
-
-    weight_change = -learning_rate * derivative(error, w)
-    
     initial_weight = network.f6.weights[neuron_index,weight_index]
     expected_updated_weight = initial_weight + weight_change
 
-    backpropagate(error, network)
+    backpropagate(error, network.f6, f6_output, learning_rate)
     @test_approx_eq_eps network.f6.weights[neuron_index,weight_index] expected_updated_weight 1e-10
-
-    #x() = (f6_output - desired_class_weights)
-    #derivative(x^2, f6_output) = derivative(x^2, x) * derivative(x, f6_output)
-    #derivative(x^2, f6_output) = 2x * 1
-    #derivative(x^2, f6_output) = 2(f6_output - desired_class_weights)
-    #derivative(error, f6_output) = sum()
-
-
-    # derivative(E, w) = derivative(mean, w)(training_costs)
-    # derivative(E, w) = derivative(mean, training_costs) * derivative(training_costs, w)
-    # mean(x) = sum(x) / length(x)
-
-    # dE_on_w = dmean(training_costs)_on_w
-    # dE_on_w = dmean_on_training_costs() * dtraining_costs_on_weight
-    #training_costs = [desired_class_cost + log(exp_minus_J + sum(exponential_of_all_classes_cost)]
-
-    #output = run(network, input)
-    #desired_class_cost = output[desired_class, :]
-    #exponential_of_all_classes_cost = [exp(x) for x in output]
-
-    #associated_input = layer.w
-    #mean_derivative_on_weight(E) = associated_input / length(E)
-
-    #backpropagate!(layer, error)
-    #@test_approx_eq_eps layer.weights[1,1,1] 0 1e-10
 end
 
 function test_all()
