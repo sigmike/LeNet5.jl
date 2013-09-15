@@ -460,6 +460,14 @@ function test_f6_backpropagation()
 
     derivative(error, w) = sum(2(f6_output - desired_class_weights)) * (1 - tanh(weighted_sum + bias)^2) * corresponding_input
 
+    weight_change = -learning_rate * derivative(error, w)
+    
+    initial_weight = network.f6.weights[neuron_index,weight_index]
+    expected_updated_weight = initial_weight + weight_change
+
+    backpropagate(error, network)
+    @test_approx_eq_eps network.f6.weights[neuron_index,weight_index] expected_updated_weight 1e-10
+
     #x() = (f6_output - desired_class_weights)
     #derivative(x^2, f6_output) = derivative(x^2, x) * derivative(x, f6_output)
     #derivative(x^2, f6_output) = 2x * 1
