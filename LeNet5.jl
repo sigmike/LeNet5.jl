@@ -421,6 +421,34 @@ function test_loss_generic()
     @test loss(network_outputs, desired_output_classes) == expected_error
 end
 
+function test_f6_backpropagation()
+    srand(123)
+
+    error = 5.0
+    layer = F6()
+
+    tanh_derivative(x) = 1 - tanh(x)^2
+    squash(x) = A * tanh(S * x)
+    squash_derivative(x) = A * S * tanh_derivative(S * x)
+    squash_derivative(x) = A * S * (1 - tanh(S * x)^2)
+
+    input = rand(32, 32)
+    desired_class = 25
+
+    output = run(network, input)
+    desired_class_cost = output[desired_class, :]
+    exponential_of_all_classes_cost = [exp(x) for x in output]
+    training_costs = [desired_class_cost + log(exp_minus_J + sum(exponential_of_all_classes_cost)]
+    E = mean(training_costs)
+
+    associated_input = layer.w
+    mean_derivative_on_weight(E) = associated_input / length(E)
+    E_derivative_on_weight = mean_derivative_on_weight(E) * training_costs_derivative_on_weight
+
+    backpropagate!(layer, error)
+    @test_approx_eq_eps layer.weights[1,1,1] 0 1e-10
+end
+
 function test_all()
     test_c1()
     test_s2()
@@ -432,6 +460,7 @@ function test_all()
     test_lenet5()
     test_loss()
     test_loss_generic()
+    test_f6_backpropagation()
 end
 
 end
