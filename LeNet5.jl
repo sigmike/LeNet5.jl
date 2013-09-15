@@ -435,18 +435,55 @@ function test_f6_backpropagation()
     input = rand(32, 32)
     desired_class = 25
 
-    output = run(network, input)
-    desired_class_cost = output[desired_class, :]
-    exponential_of_all_classes_cost = [exp(x) for x in output]
-    training_costs = [desired_class_cost + log(exp_minus_J + sum(exponential_of_all_classes_cost)]
-    E = mean(training_costs)
+    error = mean(training_costs)
+    derivative(error, w) = derivative(error, output) * derivative(output, weighted_sum) * derivative(weighted_sum, w)
+    
+    derivative(weighted_sum, w) = corresponding_input
+    
+    output = squash(weighted_sum + bias)
+    derivative(output, weighted_sum) = derivative(squash, full_sum) * derivative(full_sum, weighted_sum)
+    derivative(full_sum, weighted_sum) = 1
+    derivative(squash, x) = 1 - tanh(x)^2
+    derivative(output, weighted_sum) = 1 - tanh(weighted_sum + bias)^2
 
-    associated_input = layer.w
-    mean_derivative_on_weight(E) = associated_input / length(E)
-    E_derivative_on_weight = mean_derivative_on_weight(E) * training_costs_derivative_on_weight
+    derivative(error, output) = derivative(mean, training_costs) * derivative(training_costs, output)
+    #mean(training_costs) = sum(training_costs) / length(training_costs)
+    #derivative(mean, training_costs) = derivative(div,sum(derivative(training_costs))
+    #error = sum(training_costs) / length(training_costs)
+    #training_costs = 1/P *
+    #error = 1/P * sum(desired_class_cost
+    desired_class_weights = reshape(layer.weights[ 1,:,:], 84)
+    # dans le PDF l'erreur est calculée sur plusieurs samples, on n'en considère q'un ici
+    error = sum((f6_output - desired_class_weights).^2)
+    derivative(error, f6_output) = sum(derivative((f6_output - desired_class_weights).^2, f6_output))
+    derivative(error, f6_output) = sum(2(f6_output - desired_class_weights))
 
-    backpropagate!(layer, error)
-    @test_approx_eq_eps layer.weights[1,1,1] 0 1e-10
+    derivative(error, w) = sum(2(f6_output - desired_class_weights)) * (1 - tanh(weighted_sum + bias)^2) * corresponding_input
+
+    #x() = (f6_output - desired_class_weights)
+    #derivative(x^2, f6_output) = derivative(x^2, x) * derivative(x, f6_output)
+    #derivative(x^2, f6_output) = 2x * 1
+    #derivative(x^2, f6_output) = 2(f6_output - desired_class_weights)
+    #derivative(error, f6_output) = sum()
+
+
+    # derivative(E, w) = derivative(mean, w)(training_costs)
+    # derivative(E, w) = derivative(mean, training_costs) * derivative(training_costs, w)
+    # mean(x) = sum(x) / length(x)
+
+    # dE_on_w = dmean(training_costs)_on_w
+    # dE_on_w = dmean_on_training_costs() * dtraining_costs_on_weight
+    #training_costs = [desired_class_cost + log(exp_minus_J + sum(exponential_of_all_classes_cost)]
+
+    #output = run(network, input)
+    #desired_class_cost = output[desired_class, :]
+    #exponential_of_all_classes_cost = [exp(x) for x in output]
+
+    #associated_input = layer.w
+    #mean_derivative_on_weight(E) = associated_input / length(E)
+
+    #backpropagate!(layer, error)
+    #@test_approx_eq_eps layer.weights[1,1,1] 0 1e-10
 end
 
 function test_all()
