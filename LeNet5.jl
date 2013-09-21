@@ -424,7 +424,21 @@ end
 function backpropagate(error, layer, output, learning_rate)
 end
 
-function derivative_of_error_with_respect_to_F6_weight(network, error, neuron_index, connection_index)
+function derivative_of_error_with_respect_to_F6_weight(input, network, desired_class, neuron_index, connection_index)
+    c1_output = run(input, network.c1)
+    s2_output = run(c1_output, network.s2)
+    c3_output = run(s2_output, network.c3)
+    s4_output = run(c3_output, network.s4)
+    c5_output = run(s4_output, network.c5)
+    f6_output = run(c5_output, network.f6)
+    network_output = run(f6_output, network.output)
+
+    desired_class_weights = reshape(network.output.weights[desired_class,:,:], 84)
+
+    weighted_sum = sum(c5_output .* network.f6.weights[neuron_index])
+    bias = network.f6.biases[neuron_index]
+    corresponding_input = c5_output[connection_index]
+
     sum(2(f6_output - desired_class_weights)) * (1 - tanh(weighted_sum + bias)^2) * corresponding_input
 end
 
@@ -440,9 +454,9 @@ function test_derivative_of_error_with_respect_to_F6_weight()
 
     neuron_index = 1
     connection_index = 1
-    derivative = derivative_of_error_with_respect_to_F6_weight(input, network, neuron_index, connection_index)
+    derivative = derivative_of_error_with_respect_to_F6_weight(input, network, desired_class, neuron_index, connection_index)
     
-    change = rand()
+    change = 0.001
     network.f6.weights[neuron_index, connection_index] += change
 
     new_output = run(input, network)
