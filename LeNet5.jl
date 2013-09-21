@@ -431,17 +431,17 @@ function derivative_of_error_with_respect_to_L6_weight(network, error, neuron_in
 end
 
 function test_derivative_of_error_with_respect_to_L6_weight()
-    srand(1235662156)
+    srand(123)
 
     input = rand(32, 32)
-    desired_class = rand(1:96)
+    desired_class = 1
 
     network = NeuralNetwork()
     output = run(input, network)
     error = loss(reshape(output, 1, size(output)[1]), [desired_class])
 
-    neuron_index = rand(1:size(network.f6.weights)[1])
-    connection_index = rand(1:size(network.f6.weights)[2])
+    neuron_index = 1
+    connection_index = 1
     derivative = derivative_of_error_with_respect_to_L6_weight(network, error, neuron_index, connection_index)
     
     change = rand()
