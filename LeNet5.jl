@@ -424,25 +424,32 @@ end
 function backpropagate(error, layer, output, learning_rate)
 end
 
+function derivative_of_error_with_respect_to_L6_weight(network, error, neuron_index, connection_index)
+    function derivative(x)
+        0
+    end
+end
+
 function test_derivative_of_error_with_respect_to_L6_weight()
-    srand(123)
+    srand(1235662156)
 
     input = rand(32, 32)
-    desired_class = 3
+    desired_class = rand(1:96)
 
     network = NeuralNetwork()
-    outputs = run(input, lenet5)
-    error = loss(outputs, desired_class)
+    output = run(input, network)
+    error = loss(reshape(output, 1, size(output)[1]), [desired_class])
 
-    neuron_index = 3
-    connection_index = 5
-    derivative = derivative_of_error_with_respect_to_L6_weight(letnet5, error, neuron_index, connection_index)
+    neuron_index = rand(1:size(network.f6.weights)[1])
+    connection_index = rand(1:size(network.f6.weights)[2])
+    derivative = derivative_of_error_with_respect_to_L6_weight(network, error, neuron_index, connection_index)
     
-    change = 0.12
+    change = rand()
     network.f6.weights[neuron_index, connection_index] += change
-    new_outputs = run(input, lenet5)
-    new_error = loss(new_outputs, desired_class)
-    @test_approx_eq_eps new_error (error + derivative(change))
+
+    new_output = run(input, network)
+    new_error = loss(reshape(new_output, 1, size(new_output)[1]), [desired_class])
+    @test_approx_eq_eps new_error (error + derivative(change)) 1e-10
 end
 
 function test_f6_backpropagation()
