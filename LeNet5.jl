@@ -424,13 +424,11 @@ end
 function backpropagate(error, layer, output, learning_rate)
 end
 
-function derivative_of_error_with_respect_to_L6_weight(network, error, neuron_index, connection_index)
-    function derivative(x)
-        0
-    end
+function derivative_of_error_with_respect_to_F6_weight(network, error, neuron_index, connection_index)
+    sum(2(f6_output - desired_class_weights)) * (1 - tanh(weighted_sum + bias)^2) * corresponding_input
 end
 
-function test_derivative_of_error_with_respect_to_L6_weight()
+function test_derivative_of_error_with_respect_to_F6_weight()
     srand(123)
 
     input = rand(32, 32)
@@ -442,14 +440,14 @@ function test_derivative_of_error_with_respect_to_L6_weight()
 
     neuron_index = 1
     connection_index = 1
-    derivative = derivative_of_error_with_respect_to_L6_weight(network, error, neuron_index, connection_index)
+    derivative = derivative_of_error_with_respect_to_F6_weight(input, network, neuron_index, connection_index)
     
     change = rand()
     network.f6.weights[neuron_index, connection_index] += change
 
     new_output = run(input, network)
     new_error = loss(reshape(new_output, 1, size(new_output)[1]), [desired_class])
-    @test_approx_eq_eps new_error (error + derivative(change)) 1e-10
+    @test_approx_eq_eps new_error (error + derivative) 1e-10
 end
 
 function test_f6_backpropagation()
@@ -509,7 +507,7 @@ function test_f6_backpropagation()
 end
 
 function test_all()
-    test_derivative_of_error_with_respect_to_L6_weight()
+    test_derivative_of_error_with_respect_to_F6_weight()
     test_c1()
     test_s2()
     test_c3()
