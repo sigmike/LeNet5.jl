@@ -9,9 +9,9 @@ valid_weight(w::Number, inputs) = (max = 2.4/inputs; w <= max && w >= -max)
 valid_weight(w::Array, inputs) = (max = 2.4/inputs; all((x) -> valid_weight(x, inputs), w) && abs(std(w) - max / 2) <= 0.2 )
 
 # lecun-98 p.8 and 41
+A = 1.7159
+S = 2 / 3
 function squash(a)
-    A = 1.7159
-    S = 2 / 3
     A * tanh(S * a)
 end
 @test_approx_eq_eps 1.0 squash(1) 1e-5
@@ -439,7 +439,7 @@ function derivative_of_error_with_respect_to_F6_weight(input, network, desired_c
     bias = network.f6.biases[neuron_index]
     corresponding_input = c5_output[connection_index]
 
-    sum(2(f6_output - desired_class_weights)) * (1 - tanh(weighted_sum + bias)^2) * corresponding_input
+    sum(2(f6_output - desired_class_weights)) * (A*(1 - tanh(S*(weighted_sum + bias))^2) * S) * corresponding_input
 end
 
 function test_derivative_of_error_with_respect_to_F6_weight()
@@ -456,7 +456,7 @@ function test_derivative_of_error_with_respect_to_F6_weight()
     connection_index = 1
     derivative = derivative_of_error_with_respect_to_F6_weight(input, network, desired_class, neuron_index, connection_index)
     
-    change = 0.001
+    change = 1.00
     network.f6.weights[neuron_index, connection_index] += change
 
     new_output = run(input, network)
@@ -493,14 +493,17 @@ function test_f6_backpropagation()
     # output = squash(weighted_sum + bias)
     # derivative(output, weighted_sum) = derivative(squash, full_sum) * derivative(full_sum, weighted_sum)
     # derivative(full_sum, weighted_sum) = 1
-    # derivative(squash, x) = 1 - tanh(x)^2
+
+    # derivative(squash, x) = derivative(squash(x), Sx) * derivative(Sx, x)
+    # derivative(squash, x) = A*(1 - tanh(Sx)^2) * S
+    
     # derivative(output, weighted_sum) = 1 - tanh(weighted_sum + bias)^2
     #
     # derivative(error, output) = derivative(mean, training_costs) * derivative(training_costs, output)
     # derivative(error, f6_output) = sum(derivative((f6_output - desired_class_weights).^2, f6_output))
     # derivative(error, f6_output) = sum(2(f6_output - desired_class_weights))
     #
-    # derivative(error, w) = sum(2(f6_output - desired_class_weights)) * (1 - tanh(weighted_sum + bias)^2) * corresponding_input
+    # derivative(error, w) = sum(2(f6_output - desired_class_weights)) * (A*(1 - tanh(S*(weighted_sum + bias))^2) * S) * corresponding_input
 
     layer = network.f6
     neuron_index = 1
