@@ -450,7 +450,6 @@ function derivative_of_error_with_respect_to_F6_weight(input, network, desired_c
     # derivative(squash, x) = A*(1 - tanh(Sx)^2) * S
     # derivative(f6_output, full_sum) = A*(1 - tanh(S * full_sum)^2) * S
     #
-    # derivative(error, output) = derivative(mean, training_costs) * derivative(training_costs, output)
     # derivative(error, f6_output) = sum(derivative((f6_output - desired_class_weights).^2, f6_output))
     # derivative(error, f6_output) = sum(2(f6_output - desired_class_weights))
     #
@@ -460,8 +459,12 @@ function derivative_of_error_with_respect_to_F6_weight(input, network, desired_c
     bias = network.f6.biases[neuron_index]
     corresponding_input = c5_output[connection_index, 1, 1]
 
-    sum(2(f6_output - desired_class_weights)) * (A*(1 - tanh(S*(weighted_sum + bias))^2) * S) * corresponding_input
+    sum(2*(f6_output - desired_class_weights)) * (A*(1 - tanh(S*(weighted_sum + bias))^2) * S) * corresponding_input
 end
+
+using Gaston
+import Gaston.addcoords
+import Gaston.llplot
 
 function test_derivative_of_error_with_respect_to_F6_weight()
     srand(123)
@@ -476,7 +479,23 @@ function test_derivative_of_error_with_respect_to_F6_weight()
     neuron_index = 1
     connection_index = 1
     derivative = derivative_of_error_with_respect_to_F6_weight(input, network, desired_class, neuron_index, connection_index)
-    
+    println(derivative)
+   
+    xs = -1:0.1:1
+    ys = zeros(length(xs))
+    for i in 1:length(xs)
+        network.f6.weights[neuron_index, connection_index] = xs[i]
+        new_output = run(input, network)
+        new_error = loss(reshape(new_output, 1, size(new_output)[1]), [desired_class])
+        ys[i] = new_error
+    end
+    println(xs)
+    println(ys)
+
+   figure(1)
+   addcoords(xs,ys)
+   llplot()
+
     change = 1.00
     network.f6.weights[neuron_index, connection_index] += change
 
