@@ -439,18 +439,16 @@ function derivative_of_error_with_respect_to_F6_weight(input, network, desired_c
     #
     # Error derivative calculation:
     # error = sum((f6_output - desired_class_weights).^2)
-    # derivative(error, w) = derivative(error, output) * derivative(output, weighted_sum) * derivative(weighted_sum, w)
+    # derivative(error, w) = derivative(error, f6_output) * derivative(f6_output, weighted_sum) * derivative(weighted_sum, w)
     #
     # derivative(weighted_sum, w) = corresponding_input
     # 
-    # output = squash(weighted_sum + bias)
-    # derivative(output, weighted_sum) = derivative(squash, full_sum) * derivative(full_sum, weighted_sum)
+    # f6_output = squash(weighted_sum + bias)
+    # derivative(f6_output, weighted_sum) = derivative(f6_output, full_sum) * derivative(full_sum, weighted_sum)
     # derivative(full_sum, weighted_sum) = 1
-
     # derivative(squash, x) = derivative(squash(x), Sx) * derivative(Sx, x)
     # derivative(squash, x) = A*(1 - tanh(Sx)^2) * S
-   
-    # derivative(output, weighted_sum) = 1 - tanh(weighted_sum + bias)^2 # WRONG
+    # derivative(f6_output, full_sum) = A*(1 - tanh(S * full_sum)^2) * S
     #
     # derivative(error, output) = derivative(mean, training_costs) * derivative(training_costs, output)
     # derivative(error, f6_output) = sum(derivative((f6_output - desired_class_weights).^2, f6_output))
