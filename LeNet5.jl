@@ -458,9 +458,12 @@ function derivative_of_error_with_respect_to_F6_weight(input, network, desired_c
     # derivative(error, w) = sum(2(f6_output - desired_class_weights)) * (A*(1 - tanh(S*(weighted_sum + bias))^2) * S) * corresponding_input
 
     weighted_sum = sum(c5_output .* network.f6.weights[neuron_index,:])
+    println(weighted_sum)
     bias = network.f6.biases[neuron_index]
+    println(bias)
     corresponding_input = c5_output[connection_index, 1, 1]
 
+    println((A*(1 - tanh(S*(weighted_sum))^2) * S))
     sum(2*(f6_output - desired_class_weights)) * (A*(1 - tanh(S*(weighted_sum + bias))^2) * S) * corresponding_input
 end
 
@@ -476,8 +479,8 @@ function test_derivative_of_error_with_respect_to_F6_weight()
     output = run(input, network)
     error = loss(reshape(output, 1, size(output)[1]), [desired_class])
 
-    neuron_index = 1
-    connection_index = 1
+    neuron_index = 2
+    connection_index = 3
 
     network.f6.weights[neuron_index, connection_index] = 0
 
@@ -496,8 +499,6 @@ function test_derivative_of_error_with_respect_to_F6_weight()
             t = [new_error + derivative*xx for xx in xs]
         end
     end
-    println(xs)
-    println(ys)
 
     p = FramedPlot()
     add(p, Curve(xs, ys))
