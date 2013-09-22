@@ -384,8 +384,9 @@ function loss(outputs, desired_classes)
     errors = zeros(training_samples)
     for i in 1:training_samples
         errors[i] += outputs[i, desired_classes[i]]
-        exp_outputs = map((x) -> exp(-x), outputs[i,:])
-        errors[i] += log(exp_minus_J + sum(exp_outputs))
+        println("warning: still simplified loss function")
+        #exp_outputs = map((x) -> exp(-x), outputs[i,:])
+        #errors[i] += log(exp_minus_J + sum(exp_outputs))
     end
     mean(errors)
 end
@@ -439,6 +440,7 @@ function derivative_of_error_with_respect_to_F6_weight(input, network, desired_c
     #
     # Error derivative calculation:
     # error = sum((f6_output - desired_class_weights).^2)
+    @assert loss(reshape(network_output, 1, length(network_output)), [desired_class]) == sum((f6_output - desired_class_weights).^2)
     # derivative(error, w) = derivative(error, f6_output) * derivative(f6_output, weighted_sum) * derivative(weighted_sum, w)
     #
     # derivative(weighted_sum, w) = corresponding_input
