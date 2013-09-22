@@ -476,9 +476,13 @@ function test_derivative_of_error_with_respect_to_F6_weight()
 
     neuron_index = 1
     connection_index = 1
+
+    network.f6.weights[neuron_index, connection_index] = 0
+
     derivative = derivative_of_error_with_respect_to_F6_weight(input, network, desired_class, neuron_index, connection_index)
     println(derivative)
-   
+  
+    t = Nothing
     xs = -1:0.1:1
     ys = zeros(length(xs))
     for i in 1:length(xs)
@@ -486,12 +490,16 @@ function test_derivative_of_error_with_respect_to_F6_weight()
         new_output = run(input, network)
         new_error = loss(reshape(new_output, 1, size(new_output)[1]), [desired_class])
         ys[i] = new_error
+        if xs[i] == 0
+            t = [new_error + derivative*xx for xx in xs]
+        end
     end
     println(xs)
     println(ys)
 
     p = FramedPlot()
     add(p, Curve(xs, ys))
+    add(p, Curve(xs, t, "color", "red"))
     Winston.display(p)
 
     change = 1.00
