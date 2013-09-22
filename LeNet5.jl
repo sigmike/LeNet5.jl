@@ -462,9 +462,7 @@ function derivative_of_error_with_respect_to_F6_weight(input, network, desired_c
     sum(2*(f6_output - desired_class_weights)) * (A*(1 - tanh(S*(weighted_sum + bias))^2) * S) * corresponding_input
 end
 
-using Gaston
-import Gaston.addcoords
-import Gaston.llplot
+using Winston
 
 function test_derivative_of_error_with_respect_to_F6_weight()
     srand(123)
@@ -492,9 +490,9 @@ function test_derivative_of_error_with_respect_to_F6_weight()
     println(xs)
     println(ys)
 
-   figure(1)
-   addcoords(xs,ys)
-   llplot()
+    p = FramedPlot()
+    add(p, Curve(xs, ys))
+    Winston.display(p)
 
     change = 1.00
     network.f6.weights[neuron_index, connection_index] += change
