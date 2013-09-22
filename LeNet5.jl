@@ -425,6 +425,23 @@ end
 function backpropagate(error, layer, output, learning_rate)
 end
 
+function weighted_sum(layer, input, neuron_index)
+    base_weights = layer.weights[neuron_index,:]
+
+    input = reshape(input, length(input))
+    weights = reshape(base_weights, length(base_weights))
+
+    @show input
+    @show weights
+    @show size(input .* weights)
+    sum(input .* weights)
+end
+
+function derivative_of_weighted_sum_with_respect_to_weight(layer, input, neuron_index, connection_index)
+    corresponding_input = input[connection_index, 1, 1]
+end
+
+
 function derivative_of_error_with_respect_to_F6_weight(input, network, desired_class, neuron_index, connection_index)
     c1_output = run(input, network.c1)
     s2_output = run(c1_output, network.s2)
@@ -479,8 +496,8 @@ function test_derivative_of_error_with_respect_to_F6_weight()
     output = run(input, network)
     error = loss(reshape(output, 1, size(output)[1]), [desired_class])
 
-    neuron_index = 2
-    connection_index = 3
+    neuron_index = 1
+    connection_index = 1
 
     network.f6.weights[neuron_index, connection_index] = 0
 
@@ -492,18 +509,29 @@ function test_derivative_of_error_with_respect_to_F6_weight()
     ys = zeros(length(xs))
     for i in 1:length(xs)
         network.f6.weights[neuron_index, connection_index] = xs[i]
-        new_output = run(input, network)
-        new_error = loss(reshape(new_output, 1, size(new_output)[1]), [desired_class])
-        ys[i] = new_error
+        c1_output = run(input, network.c1)
+        s2_output = run(c1_output, network.s2)
+        c3_output = run(s2_output, network.c3)
+        s4_output = run(c3_output, network.s4)
+        c5_output = run(s4_output, network.c5)
+        f6_output = run(c5_output, network.f6)
+        new_output = run(f6_output, network.output)
+        #new_error = loss(reshape(new_output, 1, size(new_output)[1]), [desired_class])
+        #ys[i] = new_error
+        ys[i] = weighted_sum(network.f6, c5_output, neuron_index)
         if xs[i] == 0
-            t = [new_error + derivative*xx for xx in xs]
+            derivative = derivative_of_weighted_sum_with_respect_to_weight(network.f6, c5_output, neuron_index, connection_index)
+            @show derivative
+            t = [ys[i] + xx*derivative for xx in xs]
         end
     end
+    @show ys
 
     p = FramedPlot()
     add(p, Curve(xs, ys))
     add(p, Curve(xs, t, "color", "red"))
     Winston.display(p)
+    
 
     change = 1.00
     network.f6.weights[neuron_index, connection_index] += change
