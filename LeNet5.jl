@@ -435,6 +435,29 @@ function derivative_of_error_with_respect_to_F6_weight(input, network, desired_c
 
     desired_class_weights = reshape(network.output.weights[desired_class,:,:], 84)
 
+    # Error is calculated on a single training set. In the PDF the error is the average error of multiple training sets.
+    #
+    # Error derivative calculation:
+    # error = sum((f6_output - desired_class_weights).^2)
+    # derivative(error, w) = derivative(error, output) * derivative(output, weighted_sum) * derivative(weighted_sum, w)
+    #
+    # derivative(weighted_sum, w) = corresponding_input
+    # 
+    # output = squash(weighted_sum + bias)
+    # derivative(output, weighted_sum) = derivative(squash, full_sum) * derivative(full_sum, weighted_sum)
+    # derivative(full_sum, weighted_sum) = 1
+
+    # derivative(squash, x) = derivative(squash(x), Sx) * derivative(Sx, x)
+    # derivative(squash, x) = A*(1 - tanh(Sx)^2) * S
+   
+    # derivative(output, weighted_sum) = 1 - tanh(weighted_sum + bias)^2 # WRONG
+    #
+    # derivative(error, output) = derivative(mean, training_costs) * derivative(training_costs, output)
+    # derivative(error, f6_output) = sum(derivative((f6_output - desired_class_weights).^2, f6_output))
+    # derivative(error, f6_output) = sum(2(f6_output - desired_class_weights))
+    #
+    # derivative(error, w) = sum(2(f6_output - desired_class_weights)) * (A*(1 - tanh(S*(weighted_sum + bias))^2) * S) * corresponding_input
+
     weighted_sum = sum(c5_output .* network.f6.weights[neuron_index])
     bias = network.f6.biases[neuron_index]
     corresponding_input = c5_output[connection_index, 1, 1]
@@ -446,7 +469,7 @@ function test_derivative_of_error_with_respect_to_F6_weight()
     srand(123)
 
     input = rand(32, 32)
-    desired_class = 1
+    desired_class = 2
 
     network = NeuralNetwork()
     output = run(input, network)
@@ -482,29 +505,6 @@ function test_f6_backpropagation()
     error = 5.0
     learning_rate = 0.1 # should be per neuron
     
-    # Error is calculated on a single training set. In the PDF the error is the average error of multiple training sets.
-    #
-    # Error derivative calculation:
-    # error = sum((f6_output - desired_class_weights).^2)
-    # derivative(error, w) = derivative(error, output) * derivative(output, weighted_sum) * derivative(weighted_sum, w)
-    #
-    # derivative(weighted_sum, w) = corresponding_input
-    # 
-    # output = squash(weighted_sum + bias)
-    # derivative(output, weighted_sum) = derivative(squash, full_sum) * derivative(full_sum, weighted_sum)
-    # derivative(full_sum, weighted_sum) = 1
-
-    # derivative(squash, x) = derivative(squash(x), Sx) * derivative(Sx, x)
-    # derivative(squash, x) = A*(1 - tanh(Sx)^2) * S
-   
-    # derivative(output, weighted_sum) = 1 - tanh(weighted_sum + bias)^2 # WRONG
-    #
-    # derivative(error, output) = derivative(mean, training_costs) * derivative(training_costs, output)
-    # derivative(error, f6_output) = sum(derivative((f6_output - desired_class_weights).^2, f6_output))
-    # derivative(error, f6_output) = sum(2(f6_output - desired_class_weights))
-    #
-    # derivative(error, w) = sum(2(f6_output - desired_class_weights)) * (A*(1 - tanh(S*(weighted_sum + bias))^2) * S) * corresponding_input
-
     layer = network.f6
     neuron_index = 1
     weight_index = 1
