@@ -437,7 +437,7 @@ function derivative_of_error_with_respect_to_F6_weight(input, network, desired_c
 
     weighted_sum = sum(c5_output .* network.f6.weights[neuron_index])
     bias = network.f6.biases[neuron_index]
-    corresponding_input = c5_output[connection_index]
+    corresponding_input = c5_output[connection_index, 1, 1]
 
     sum(2(f6_output - desired_class_weights)) * (A*(1 - tanh(S*(weighted_sum + bias))^2) * S) * corresponding_input
 end
@@ -496,8 +496,8 @@ function test_f6_backpropagation()
 
     # derivative(squash, x) = derivative(squash(x), Sx) * derivative(Sx, x)
     # derivative(squash, x) = A*(1 - tanh(Sx)^2) * S
-    
-    # derivative(output, weighted_sum) = 1 - tanh(weighted_sum + bias)^2
+   
+    # derivative(output, weighted_sum) = 1 - tanh(weighted_sum + bias)^2 # WRONG
     #
     # derivative(error, output) = derivative(mean, training_costs) * derivative(training_costs, output)
     # derivative(error, f6_output) = sum(derivative((f6_output - desired_class_weights).^2, f6_output))
