@@ -439,25 +439,25 @@ function derivative_of_error_with_respect_to_F6_weight(input, network, desired_c
     # Error is calculated on a single training set. In the PDF the error is the average error of multiple training sets.
     #
     # Error derivative calculation:
-    # error = sum((f6_output - desired_class_weights).^2)
+    # error = sum((f6_output - desired_class_weights).^2) ## Simplified !
     @assert loss(reshape(network_output, 1, length(network_output)), [desired_class]) == sum((f6_output - desired_class_weights).^2)
     # derivative(error, w) = derivative(error, f6_output) * derivative(f6_output, weighted_sum) * derivative(weighted_sum, w)
-    #
-    # derivative(weighted_sum, w) = corresponding_input
-    # 
-    # f6_output = squash(weighted_sum + bias)
-    # derivative(f6_output, weighted_sum) = derivative(f6_output, full_sum) * derivative(full_sum, weighted_sum)
-    # derivative(full_sum, weighted_sum) = 1
-    # derivative(squash, x) = derivative(squash(x), Sx) * derivative(Sx, x)
-    # derivative(squash, x) = A*(1 - tanh(Sx)^2) * S
-    # derivative(f6_output, full_sum) = A*(1 - tanh(S * full_sum)^2) * S
     #
     # derivative(error, f6_output) = sum(derivative((f6_output - desired_class_weights).^2, f6_output))
     # derivative(error, f6_output) = sum(2(f6_output - desired_class_weights))
     #
+    # f6_output = squash(weighted_sum + bias)
+    # derivative(f6_output, weighted_sum) = derivative(f6_output, full_sum) * derivative(full_sum, weighted_sum)
+    # derivative(full_sum, weighted_sum) = 1
+    # derivative(squash, x) = derivative(squash(x), Sx) * derivative(Sx, x)
+    # derivative(squash, x) = A*(1 - tanh(Sx)^2) * S # verified: http://math.stackexchange.com/questions/192433/derivative-of-neural-network-function
+    # derivative(f6_output, full_sum) = A*(1 - tanh(S * full_sum)^2) * S
+    #
+    # derivative(weighted_sum, w) = corresponding_input
+    # 
     # derivative(error, w) = sum(2(f6_output - desired_class_weights)) * (A*(1 - tanh(S*(weighted_sum + bias))^2) * S) * corresponding_input
 
-    weighted_sum = sum(c5_output .* network.f6.weights[neuron_index])
+    weighted_sum = sum(c5_output .* network.f6.weights[neuron_index,:])
     bias = network.f6.biases[neuron_index]
     corresponding_input = c5_output[connection_index, 1, 1]
 
