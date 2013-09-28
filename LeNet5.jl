@@ -490,6 +490,30 @@ end
 
 using Winston
 
+function show_derivative(range, value, setter, f, derivative_f)
+    t = Nothing
+    xs = range
+    ys = zeros(length(xs))
+    for i in 1:length(xs)
+        setter(xs[i])
+        #new_error = loss(reshape(new_output, 1, size(new_output)[1]), [desired_class])
+        #ys[i] = new_error
+        ys[i] = f()
+        if xs[i] == 0
+            derivative = derivative_f()
+            @show derivative
+            t = [ys[i] + xx*derivative for xx in xs]
+        end
+    end
+    @show ys
+
+    p = FramedPlot()
+    add(p, Curve(xs, ys))
+    add(p, Curve(xs, t, "color", "red"))
+    Winston.display(p)
+end
+
+
 function test_derivative_of_error_with_respect_to_F6_weight()
     srand(123)
 
@@ -508,28 +532,14 @@ function test_derivative_of_error_with_respect_to_F6_weight()
     derivative = derivative_of_error_with_respect_to_F6_weight(input, network, desired_class, neuron_index, connection_index)
     println(derivative)
   
-    t = Nothing
-    xs = -1:0.1:1
-    ys = zeros(length(xs))
-    for i in 1:length(xs)
-        network.f6.weights[neuron_index, connection_index] = xs[i]
-        run(input, network)
-        #new_error = loss(reshape(new_output, 1, size(new_output)[1]), [desired_class])
-        #ys[i] = new_error
-        ys[i] = weighted_sum(network.f6, network.c5.output, neuron_index)
-        if xs[i] == 0
-            derivative = derivative_of_weighted_sum_with_respect_to_weight(network.f6, network.c5.output, neuron_index, connection_index)
-            @show derivative
-            t = [ys[i] + xx*derivative for xx in xs]
-        end
-    end
-    @show ys
-
-    p = FramedPlot()
-    add(p, Curve(xs, ys))
-    add(p, Curve(xs, t, "color", "red"))
-    Winston.display(p)
-    
+    show_derivative(-1:0.1:1, 0,
+        (value)->begin
+            run(input, network)
+            network.f6.weights[neuron_index, connection_index] = value
+        end,
+        ()->weighted_sum(network.f6, network.c5.output, neuron_index),
+        ()->derivative_of_weighted_sum_with_respect_to_weight(network.f6, network.c5.output, neuron_index, connection_index),
+    )
 
     change = 1.00
     network.f6.weights[neuron_index, connection_index] += change
