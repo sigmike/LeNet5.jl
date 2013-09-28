@@ -580,14 +580,43 @@ function test_derivative_of_error_with_respect_to_F6_weight()
         ()->derivative_of_squash(x),
     )
     
+    desired_class_weights = reshape(network.output.weights[desired_class,:,:], 84)
+    
     p4 = show_derivative(-1:0.1:1, 0,
         (value)->begin
             @show network.f6.weights[neuron_index, connection_index]
             network.f6.weights[neuron_index, connection_index] = value
             run(input, network)
         end,
+  
         ()->single_loss(network.output.output, desired_class),
         ()->derivative_of_error_with_respect_to_F6_weight(network, desired_class, neuron_index, connection_index),
+        )
+
+    p5 = show_derivative(-1:0.1:1, 0,
+        (value)->begin
+            @show network.f6.weights[neuron_index, connection_index]
+            network.f6.weights[neuron_index, connection_index] = value
+            run(input, network)
+        end,
+  
+        ()->sum((network.f6.output - desired_class_weights).^2),
+        ()->begin
+            c5_output = network.c5.output
+            f6_output = network.f6.output
+            network_output = network.output.output
+
+            neuron_weighted_sum = weighted_sum(network.f6, c5_output, neuron_index)
+            println(neuron_weighted_sum)
+            bias = network.f6.biases[neuron_index]
+            println(bias)
+            corresponding_input = c5_output[connection_index, 1, 1]
+
+            @show derivative_of_error_with_respect_of_f6_output(network, desired_class, neuron_index)
+            @show derivative_of_squash(neuron_weighted_sum + bias)
+            @show corresponding_input
+            derivative_of_error_with_respect_of_f6_output(network, desired_class, neuron_index) * derivative_of_squash(neuron_weighted_sum + bias) * corresponding_input
+        end
     )
 
     table = Table(1,3)
@@ -595,10 +624,14 @@ function test_derivative_of_error_with_respect_to_F6_weight()
     table[1,2] = p2
     table[1,3] = p3
 
-    t2 = Table(2, 1)
-    t2[1,1] = table
-    t2[2,1] = p4
-    Winston.display(t2)
+    table2 = Table(1,2)
+    table2[1,1] = p4
+    table2[1,2] = p5
+
+    tf = Table(2, 1)
+    tf[1,1] = table
+    tf[2,1] = table2
+    Winston.display(tf)
 
     change = 1.00
     network.f6.weights[neuron_index, connection_index] += change
