@@ -450,12 +450,9 @@ end
 
 
 function derivative_of_error_with_respect_to_F6_weight(input, network, desired_class, neuron_index, connection_index)
-    c1_output = run(input, network.c1)
-    s2_output = run(c1_output, network.s2)
-    c3_output = run(s2_output, network.c3)
-    s4_output = run(c3_output, network.s4)
-    c5_output = run(s4_output, network.c5)
-    f6_output = run(c5_output, network.f6)
+    run(input, network)
+    c5_output = network.c5.output
+    f6_output = network.f6.output
     network_output = run(f6_output, network.output)
 
     desired_class_weights = reshape(network.output.weights[desired_class,:,:], 84)
@@ -516,18 +513,12 @@ function test_derivative_of_error_with_respect_to_F6_weight()
     ys = zeros(length(xs))
     for i in 1:length(xs)
         network.f6.weights[neuron_index, connection_index] = xs[i]
-        c1_output = run(input, network.c1)
-        s2_output = run(c1_output, network.s2)
-        c3_output = run(s2_output, network.c3)
-        s4_output = run(c3_output, network.s4)
-        c5_output = run(s4_output, network.c5)
-        f6_output = run(c5_output, network.f6)
-        new_output = run(f6_output, network.output)
+        run(input, network)
         #new_error = loss(reshape(new_output, 1, size(new_output)[1]), [desired_class])
         #ys[i] = new_error
-        ys[i] = weighted_sum(network.f6, c5_output, neuron_index)
+        ys[i] = weighted_sum(network.f6, network.c5.output, neuron_index)
         if xs[i] == 0
-            derivative = derivative_of_weighted_sum_with_respect_to_weight(network.f6, c5_output, neuron_index, connection_index)
+            derivative = derivative_of_weighted_sum_with_respect_to_weight(network.f6, network.c5.output, neuron_index, connection_index)
             @show derivative
             t = [ys[i] + xx*derivative for xx in xs]
         end
