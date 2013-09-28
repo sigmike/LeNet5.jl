@@ -593,6 +593,8 @@ function test_derivative_of_error_with_respect_to_F6_weight()
         ()->derivative_of_error_with_respect_to_F6_weight(network, desired_class, neuron_index, connection_index),
         )
 
+        @show network.c5.output
+        @show network.f6.weights[1,:]
     p5 = show_derivative(-1:0.1:1, 0,
         (value)->begin
             @show network.f6.weights[neuron_index, connection_index]
@@ -600,7 +602,7 @@ function test_derivative_of_error_with_respect_to_F6_weight()
             run(input, network)
         end,
   
-        ()->sum(([squash(sum(network.f6.weights[i]) + network.f6.biases[i]) for i in 1:84] - desired_class_weights).^2),
+        ()->sum(([squash(sum(reshape(network.c5.output,120) .* reshape(network.f6.weights[i,:],120)) + network.f6.biases[i]) for i in 1:84] - desired_class_weights).^2),
         ()->begin
             c5_output = network.c5.output
             f6_output = network.f6.output
@@ -616,7 +618,7 @@ function test_derivative_of_error_with_respect_to_F6_weight()
             @show derivative_of_squash(neuron_weighted_sum + bias)
             @show corresponding_input
             (2*(network.f6.output[neuron_index] - desired_class_weights[neuron_index])) *
-              derivative_of_squash(neuron_weighted_sum + bias)
+              derivative_of_squash(neuron_weighted_sum + bias) * corresponding_input
         end
     )
 
