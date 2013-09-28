@@ -344,6 +344,16 @@ function test_output()
     @test_approx_eq_eps output[21] sum((input - reshape(layer.weights[21,:,:], 84)).^2) 1e-10
 end
 
+function test_precise_output()
+    srand(123)
+    input = ones(84)
+    layer = Output()
+
+    output = run(input, layer)
+    @test size(output) == (96,)
+    @test_approx_eq_eps output[ 2] ((7*12-18)*4 + (18*0)) 1e-10
+end
+
 type NeuralNetwork <: Layer
     c1
     s2
@@ -559,7 +569,7 @@ function test_derivative_of_error_with_respect_to_F6_weight()
     #    ()->derivative_of_weighted_sum_with_respect_to_weight(network.f6, network.c5.output, neuron_index, connection_index),
     #)
 
-    show_derivative(-1:0.1:1, 0,
+    show_derivative(-5:0.1:5, 0,
         (value)->begin
             @show network.f6.weights[neuron_index, connection_index]
             network.f6.weights[neuron_index, connection_index] = value
