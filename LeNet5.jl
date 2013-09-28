@@ -573,7 +573,14 @@ function test_derivative_of_error_with_respect_to_F6_weight()
         ()->derivative_of_weighted_sum_with_respect_to_weight(network.f6, network.c5.output, neuron_index, connection_index),
     )
 
+    x = 0
     p3 = show_derivative(-1:0.1:1, 0,
+        (value)-> x = value,
+        ()->squash(x),
+        ()->derivative_of_squash(x),
+    )
+    
+    p4 = show_derivative(-1:0.1:1, 0,
         (value)->begin
             @show network.f6.weights[neuron_index, connection_index]
             network.f6.weights[neuron_index, connection_index] = value
@@ -583,19 +590,15 @@ function test_derivative_of_error_with_respect_to_F6_weight()
         ()->derivative_of_error_with_respect_to_F6_weight(network, desired_class, neuron_index, connection_index),
     )
 
-    x = 0
-    p4 = show_derivative(-1:0.1:1, 0,
-        (value)-> x = value,
-        ()->squash(x),
-        ()->derivative_of_squash(x),
-    )
-
-    table = Table(2,2)
+    table = Table(1,3)
     table[1,1] = p1
     table[1,2] = p2
-    table[2,1] = p3
-    table[2,2] = p4
-    Winston.display(table)
+    table[1,3] = p3
+
+    t2 = Table(2, 1)
+    t2[1,1] = table
+    t2[2,1] = p4
+    Winston.display(t2)
 
     change = 1.00
     network.f6.weights[neuron_index, connection_index] += change
