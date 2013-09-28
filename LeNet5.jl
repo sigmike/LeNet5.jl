@@ -490,11 +490,12 @@ function derivative_of_error_with_respect_to_F6_weight(network, desired_class, n
     # derivative(error, f6_output_on_neuron) = 2*(f6_output_on_neuron - desired_class_weights_on_neuron))
     #
     # f6_output = squash(neuron_weighted_sum + bias)
-    # derivative(f6_output, neuron_weighted_sum) = derivative(f6_output, full_sum) * derivative(full_sum, neuron_weighted_sum)
+    # derivative(f6_output_on_neuron, neuron_weighted_sum) = derivative(f6_output_on_neuron, full_sum) * derivative(full_sum, neuron_weighted_sum)
     # derivative(full_sum, neuron_weighted_sum) = 1
     # derivative(squash, x) = derivative(squash(x), Sx) * derivative(Sx, x)
     # derivative(squash, x) = A*(1 - tanh(Sx)^2) * S # verified: http://math.stackexchange.com/questions/192433/derivative-of-neural-network-function
-    # derivative(f6_output, full_sum) = A*(1 - tanh(S * full_sum)^2) * S
+    # derivative(f6_output_on_neuron, full_sum) = derivative(squash(full_sum), full_sum)
+    # derivative(f6_output_on_neuron, full_sum) = A*(1 - tanh(S * full_sum)^2) * S
     #
     # derivative(neuron_weighted_sum, w) = corresponding_input
     # 
@@ -514,7 +515,7 @@ end
 
 using Winston
 
-function show_derivative(range, value, setter, f, derivative_f)
+function show_derivative(frame, range, value, setter, f, derivative_f)
     t = Nothing
     xs = range
     ys = zeros(length(xs))
@@ -527,10 +528,8 @@ function show_derivative(range, value, setter, f, derivative_f)
         end
     end
 
-    p = FramedPlot()
-    add(p, Curve(xs, ys))
-    add(p, Curve(xs, t, "color", "red"))
-    Winston.display(p)
+    add(frame, Curve(xs, ys))
+    add(frame, Curve(xs, t, "color", "red"))
 end
 
 
@@ -552,28 +551,33 @@ function test_derivative_of_error_with_respect_to_F6_weight()
     derivative = derivative_of_error_with_respect_to_F6_weight(network, desired_class, neuron_index, connection_index)
     @show derivative
 
-    #initial = copy(network.f6.output)
-    #show_derivative(-1:0.1:1, 0,
-    #    (value)->begin
-    #      for i in neuron_index:neuron_index #length(network.f6.output)
-    #        network.f6.output[i] = initial[i] + value
-    #      end
-    #      run(network.f6.output, network.output)
-    #    end,
-    #    ()->single_loss(network.output.output, desired_class),
-    #    ()->derivative_of_error_with_respect_of_f6_output(network, desired_class, neuron_index),
-    #)
+    frame = FramedArray( 2, 2)
+    setattr(frame, "aspect_ratio", 0.75 )
+    setattr(frame, "uniform_limits", false )
+    setattr(frame, "cellspacing", 1. )
 
-    #show_derivative(-1:0.1:1, 0,
-    #    (value)->begin
-    #        network.f6.weights[neuron_index, connection_index] = value
-    #        run(input, network)
-    #    end,
-    #    ()->weighted_sum(network.f6, network.c5.output, neuron_index),
-    #    ()->derivative_of_weighted_sum_with_respect_to_weight(network.f6, network.c5.output, neuron_index, connection_index),
-    #)
+    initial = copy(network.f6.output)
+    show_derivative(frame[1,1], -1:0.1:1, 0,
+        (value)->begin
+          for i in neuron_index:neuron_index length(network.f6.output)
+            network.f6.output[i] = initial[i] + value
+          end
+          run(network.f6.output, network.output)
+        end,
+        ()->single_loss(network.output.output, desired_class),
+        ()->derivative_of_error_with_respect_of_f6_output(network, desired_class, neuron_index),
+    )
 
-    show_derivative(-1:0.1:1, 0,
+    show_derivative(frame[1,2], -1:0.1:1, 0,
+        (value)->begin
+            network.f6.weights[neuron_index, connection_index] = value
+            run(input, network)
+        end,
+        ()->weighted_sum(network.f6, network.c5.output, neuron_index),
+        ()->derivative_of_weighted_sum_with_respect_to_weight(network.f6, network.c5.output, neuron_index, connection_index),
+    )
+
+    show_derivative(frame[2,1], -1:0.1:1, 0,
         (value)->begin
             @show network.f6.weights[neuron_index, connection_index]
             network.f6.weights[neuron_index, connection_index] = value
@@ -583,12 +587,14 @@ function test_derivative_of_error_with_respect_to_F6_weight()
         ()->derivative_of_error_with_respect_to_F6_weight(network, desired_class, neuron_index, connection_index),
     )
 
-    #x = 0
-    #show_derivative(-1:0.1:1, 0,
-    #    (value)-> x = value,
-    #    ()->squash(x),
-    #    ()->derivative_of_squash(x),
-    #)
+    x = 0
+    show_derivative(frame[2,2], -1:0.1:1, 0,
+        (value)-> x = value,
+        ()->squash(x),
+        ()->derivative_of_squash(x),
+    )
+
+    Winston.display(frame)
 
     change = 1.00
     network.f6.weights[neuron_index, connection_index] += change
