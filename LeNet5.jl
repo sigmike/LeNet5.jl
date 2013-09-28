@@ -452,6 +452,10 @@ function derivative_of_squash(x)
     A*(1 - tanh(S*x)^2) * S
 end
 
+function derivative_of_error_with_respect_of_f6_output(network, desired_class_weights)
+    sum(2*(network.f6.output - desired_class_weights))
+end
+
 function derivative_of_error_with_respect_to_F6_weight(input, network, desired_class, neuron_index, connection_index)
     run(input, network)
     c5_output = network.c5.output
@@ -488,7 +492,7 @@ function derivative_of_error_with_respect_to_F6_weight(input, network, desired_c
     corresponding_input = c5_output[connection_index, 1, 1]
 
     println((A*(1 - tanh(S*(neuron_weighted_sum))^2) * S))
-    sum(2*(f6_output - desired_class_weights)) * derivative_of_squash(neuron_weighted_sum + bias) * corresponding_input
+    derivative_of_error_with_respect_of_f6_output(network, desired_class_weights) * derivative_of_squash(neuron_weighted_sum + bias) * corresponding_input
 end
 
 using Winston
