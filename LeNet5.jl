@@ -538,11 +538,12 @@ function test_derivative_of_error_with_respect_to_F6_weight()
 
     derivative = derivative_of_error_with_respect_to_F6_weight(input, network, desired_class, neuron_index, connection_index)
     println(derivative)
- 
+
+    initial = copy(network.f6.output)
     show_derivative(-1:0.1:1, 0,
         (value)->begin
           for i in 1:length(network.f6.output)
-            network.f6.output[i] = value
+            network.f6.output[i] = initial[i] + value
           end
           run(network.f6.output, network.output)
         end,
