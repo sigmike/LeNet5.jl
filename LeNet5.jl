@@ -277,7 +277,7 @@ end
 
 function run(input, layer::F6)
     for i in 1:84
-        layer.output[i] = squash(sum(input .* layer.weights[i]) + layer.biases[i])
+        layer.output[i] = squash(sum(reshape(input,120) .* reshape(layer.weights[i,:],120)) + layer.biases[i])
     end
     layer.output
 end
@@ -636,12 +636,12 @@ function test_derivative_of_error_with_respect_to_F6_weight()
     tf[2,1] = table2
     Winston.display(tf)
 
-    change = 1.00
+    change = 0.01 
     network.f6.weights[neuron_index, connection_index] += change
 
     new_output = run(input, network)
     new_error = single_loss(new_output, desired_class)
-    @test_approx_eq_eps new_error (error + derivative) 1e-10
+    @test_approx_eq_eps new_error (error + derivative) 1e-2
 end
 
 function test_f6_backpropagation()
