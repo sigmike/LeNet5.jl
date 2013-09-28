@@ -530,7 +530,7 @@ function show_derivative(range, value, setter, f, derivative_f)
     p = FramedPlot()
     add(p, Curve(xs, ys))
     add(p, Curve(xs, t, "color", "red"))
-    Winston.display(p)
+    p
 end
 
 
@@ -553,7 +553,7 @@ function test_derivative_of_error_with_respect_to_F6_weight()
     @show derivative
 
     initial = copy(network.f6.output)
-    show_derivative(-1:0.1:1, 0,
+    p1 = show_derivative(-1:0.1:1, 0,
         (value)->begin
           for i in neuron_index:neuron_index length(network.f6.output)
             network.f6.output[i] = initial[i] + value
@@ -564,7 +564,7 @@ function test_derivative_of_error_with_respect_to_F6_weight()
         ()->derivative_of_error_with_respect_of_f6_output(network, desired_class, neuron_index),
     )
 
-    show_derivative(-1:0.1:1, 0,
+    p2 = show_derivative(-1:0.1:1, 0,
         (value)->begin
             network.f6.weights[neuron_index, connection_index] = value
             run(input, network)
@@ -573,7 +573,7 @@ function test_derivative_of_error_with_respect_to_F6_weight()
         ()->derivative_of_weighted_sum_with_respect_to_weight(network.f6, network.c5.output, neuron_index, connection_index),
     )
 
-    show_derivative(-1:0.1:1, 0,
+    p3 = show_derivative(-1:0.1:1, 0,
         (value)->begin
             @show network.f6.weights[neuron_index, connection_index]
             network.f6.weights[neuron_index, connection_index] = value
@@ -584,11 +584,18 @@ function test_derivative_of_error_with_respect_to_F6_weight()
     )
 
     x = 0
-    show_derivative(-1:0.1:1, 0,
+    p4 = show_derivative(-1:0.1:1, 0,
         (value)-> x = value,
         ()->squash(x),
         ()->derivative_of_squash(x),
     )
+
+    table = Table(2,2)
+    table[1,1] = p1
+    table[1,2] = p2
+    table[2,1] = p3
+    table[2,2] = p4
+    Winston.display(table)
 
     change = 1.00
     network.f6.weights[neuron_index, connection_index] += change
