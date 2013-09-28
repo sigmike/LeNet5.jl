@@ -23,20 +23,21 @@ abstract Layer
 type C1 <: Layer
     weights
     biases
+
+    output
 end
-C1() = C1(random_weight(5*5, 6, 5,5), random_weight(5*5, 6))
+C1() = C1(random_weight(5*5, 6, 5,5), random_weight(5*5, 6), zeros(6,28,28))
 
 function run(input, layer::C1)
     @assert size(input) == (32,32)
-    output = zeros(6,28,28)
     for feature_map in 1:6
         for i in 1:28
             for j in 1:28
-                output[feature_map, i, j] = squash(sum(input[i:i+5-1, j:j+5-1] .* layer.weights[feature_map]) + layer.biases[feature_map])
+                layer.output[feature_map, i, j] = squash(sum(input[i:i+5-1, j:j+5-1] .* layer.weights[feature_map]) + layer.biases[feature_map])
             end
         end
     end
-    output
+    layer.output
 end
 
 parameters(c1::C1) = [c1.weights..., c1.biases...]
@@ -58,17 +59,18 @@ end
 type S2 <: Layer
     coefficients
     biases
+
+    output
 end
-S2() = S2(random_weight(2*2,6), random_weight(2*2,6))
+S2() = S2(random_weight(2*2,6), random_weight(2*2,6), zeros(6, 14, 14))
 
 function run(input, layer::S2)
-    output = zeros(6, 14, 14)
     for f in 1:6, i in 1:14, j in 1:14
         i2 = i*2-1
         j2 = j*2-1
-        output[f, i, j] = squash((input[f, i2, j2] + input[f, i2+1, j2] + input[f, i2, j2+1] + input[f, i2+1, j2+1]) * layer.coefficients[f] + layer.biases[f])
+        layer.output[f, i, j] = squash((input[f, i2, j2] + input[f, i2+1, j2] + input[f, i2, j2+1] + input[f, i2+1, j2+1]) * layer.coefficients[f] + layer.biases[f])
     end
-    output
+    layer.output
 end
 parameters(s2::S2) = [s2.coefficients..., s2.biases...]
 
@@ -94,6 +96,8 @@ end
 
 type C3 <: Layer
     feature_maps
+
+    output
 end
 function C3()
     maps = Array(C3FeatureMap, (16))
@@ -120,7 +124,7 @@ function C3()
         map = C3FeatureMap(index_map, random_weight(length(index_map)*5*5, length(index_map), 5, 5), random_weight(length(index_map)*5*5))
         maps[i] = map 
     end
-    C3(maps)
+    C3(maps, zeros(16, 10, 10))
 end
 function parameters(layer::C3)
     result = {}
@@ -131,20 +135,20 @@ function parameters(layer::C3)
 end
 function run(input, layer::C3)
     @assert size(input) == (6, 14, 14)
-    output = zeros(16, 10, 10)
+    fill!(layer.output, 0)
     for feature_map_index in 1:16
         feature_map = layer.feature_maps[feature_map_index]
         for i in 1:10
             for j in 1:10
                 for input_index in 1:length(feature_map.input_map_indexes)
                     input_map_index = feature_map.input_map_indexes[input_index]
-                    output[feature_map_index, i, j] += sum(input[input_map_index, i:i+5-1, j:j+5-1] .* feature_map.weights[input_index, 1:5, 1:5])
+                    layer.output[feature_map_index, i, j] += sum(input[input_map_index, i:i+5-1, j:j+5-1] .* feature_map.weights[input_index, 1:5, 1:5])
                 end
-                output[feature_map_index, i, j] = squash(output[feature_map_index, i, j] + feature_map.bias)
+                layer.output[feature_map_index, i, j] = squash(layer.output[feature_map_index, i, j] + feature_map.bias)
             end
         end
     end
-    output
+    layer.output
 end
 
 function test_c3()
@@ -173,17 +177,18 @@ end
 type S4 <: Layer
     coefficients
     biases
+
+    output
 end
-S4() = S4(random_weight(2*2,16), random_weight(2*2,16))
+S4() = S4(random_weight(2*2,16), random_weight(2*2,16), zeros(16, 5, 5))
 
 function run(input, layer::S4)
-    output = zeros(16, 5, 5)
     for f in 1:16, i in 1:5, j in 1:5
         i2 = i*2-1
         j2 = j*2-1
-        output[f, i, j] = squash((input[f, i2, j2] + input[f, i2+1, j2] + input[f, i2, j2+1] + input[f, i2+1, j2+1]) * layer.coefficients[f] + layer.biases[f])
+        layer.output[f, i, j] = squash((input[f, i2, j2] + input[f, i2+1, j2] + input[f, i2, j2+1] + input[f, i2+1, j2+1]) * layer.coefficients[f] + layer.biases[f])
     end
-    output
+    layer.output
 end
 parameters(s4::S4) = [s4.coefficients..., s4.biases...]
 
@@ -208,6 +213,8 @@ end
 
 type C5 <: Layer
     feature_maps
+
+    output
 end
 function C5()
     maps = Array(C5FeatureMap, (120,))
@@ -215,7 +222,7 @@ function C5()
         map = C5FeatureMap(random_weight(16*5*5, 16, 5, 5), random_weight(16*5*5))
         maps[i] = map 
     end
-    C5(maps)
+    C5(maps, zeros(120, 1, 1))
 end
 function parameters(layer::C5)
     result = {}
@@ -227,19 +234,19 @@ end
 
 function run(input, layer::C5)
     @assert size(input) == (16, 5, 5)
-    output = zeros(120, 1, 1)
+    fill!(layer.output, 0)
     for feature_map_index in 1:120
         feature_map = layer.feature_maps[feature_map_index]
         for i in 1:1
             for j in 1:1
                 for input_index in 1:16
-                    output[feature_map_index, i, j] += sum(input[input_index, i:i+5-1, j:j+5-1] .* feature_map.weights[input_index, 1:5, 1:5])
+                    layer.output[feature_map_index, i, j] += sum(input[input_index, i:i+5-1, j:j+5-1] .* feature_map.weights[input_index, 1:5, 1:5])
                 end
-                output[feature_map_index, i, j] = squash(output[feature_map_index, i, j] + feature_map.bias)
+                layer.output[feature_map_index, i, j] = squash(layer.output[feature_map_index, i, j] + feature_map.bias)
             end
         end
     end
-    output
+    layer.output
 end
 
 function test_c5()
@@ -259,19 +266,20 @@ end
 type F6 <: Layer
     weights
     biases
+
+    output
 end
-F6() = F6(random_weight(120, 84, 120), random_weight(120, 84))
+F6() = F6(random_weight(120, 84, 120), random_weight(120, 84), zeros(84))
 
 function parameters(layer::F6)
     [layer.weights..., layer.biases...]
 end
 
 function run(input, layer::F6)
-    output = zeros(84)
     for i in 1:84
-        output[i] = squash(sum(input .* layer.weights[i]) + layer.biases[i])
+        layer.output[i] = squash(sum(input .* layer.weights[i]) + layer.biases[i])
     end
-    output
+    layer.output
 end
 
 function test_f6()
@@ -290,6 +298,8 @@ end
 
 type Output <: Layer
     weights
+
+    output
 end
 
 using Images
@@ -308,17 +318,17 @@ function Output()
         end
     end
 
-    Output(weights)
+    Output(weights, zeros(96))
 end
 
 function run(input, layer::Output)
-    output = zeros(96)
+    fill!(layer.output, 0)
     for i in 1:96
         for j in 1:84
-            output[i] += ((input[j] - layer.weights[i,j]) .^ 2)
+            layer.output[i] += ((input[j] - layer.weights[i,j]) .^ 2)
         end
     end
-    output
+    layer.output
 end
 
 function test_output()
@@ -346,14 +356,14 @@ end
 NeuralNetwork() = NeuralNetwork(C1(), S2(), C3(), S4(), C5(), F6(), Output())
 
 function run(input, network::NeuralNetwork)
-    output = run(input, network.c1)
-    output = run(output, network.s2)
-    output = run(output, network.c3)
-    output = run(output, network.s4)
-    output = run(output, network.c5)
-    output = run(output, network.f6)
-    output = run(output, network.output)
-    output
+    run(input, network.c1)
+    run(network.c1.output, network.s2)
+    run(network.s2.output, network.c3)
+    run(network.c3.output, network.s4)
+    run(network.s4.output, network.c5)
+    run(network.c5.output, network.f6)
+    run(network.f6.output, network.output)
+    network.output.output
 end
 
 import Base.|>
