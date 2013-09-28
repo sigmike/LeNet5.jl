@@ -398,6 +398,10 @@ end
 
 exp_minus_J = exp(-5)
 
+function single_loss(output, desired_class)
+  output[desired_class]
+end
+
 function loss(outputs, desired_classes)
     training_samples = length(desired_classes)
     @assert size(outputs)[1] == training_samples
@@ -479,7 +483,7 @@ function derivative_of_error_with_respect_to_F6_weight(network, desired_class, n
     #
     # Error derivative calculation:
     # error = sum((f6_output - desired_class_weights).^2) ## Simplified !
-    @assert loss(reshape(network_output, 1, length(network_output)), [desired_class]) == sum((f6_output - desired_class_weights).^2)
+    @assert single_loss(network_output, desired_class) == sum((f6_output - desired_class_weights).^2)
     # derivative(error, w) = derivative(error, f6_output) * derivative(f6_output, neuron_weighted_sum) * derivative(neuron_weighted_sum, w)
     #
     # derivative(error, f6_output) = sum(derivative((f6_output - desired_class_weights).^2, f6_output))
@@ -538,7 +542,7 @@ function test_derivative_of_error_with_respect_to_F6_weight()
 
     network = NeuralNetwork()
     output = run(input, network)
-    error = loss(reshape(output, 1, size(output)[1]), [desired_class])
+    error = single_loss(output, desired_class)
 
     neuron_index = 1
     connection_index = 1
@@ -556,7 +560,7 @@ function test_derivative_of_error_with_respect_to_F6_weight()
     #      end
     #      run(network.f6.output, network.output)
     #    end,
-    #    ()->loss(reshape(network.output.output, 1, size(network.output.output)[1]), [desired_class]),
+    #    ()->single_loss(network.output.output, desired_class),
     #    ()->derivative_of_error_with_respect_of_f6_output(network, desired_class),
     #)
 
@@ -575,7 +579,7 @@ function test_derivative_of_error_with_respect_to_F6_weight()
             network.f6.weights[neuron_index, connection_index] = value
             run(input, network)
         end,
-        ()->loss(reshape(network.output.output, 1, size(network.output.output)[1]), [desired_class]),
+        ()->single_loss(network.output.output, desired_class),
         ()->derivative_of_error_with_respect_to_F6_weight(network, desired_class, neuron_index, connection_index),
     )
 
@@ -590,7 +594,7 @@ function test_derivative_of_error_with_respect_to_F6_weight()
     network.f6.weights[neuron_index, connection_index] += change
 
     new_output = run(input, network)
-    new_error = loss(reshape(new_output, 1, size(new_output)[1]), [desired_class])
+    new_error = single_loss(new_output, desired_class)
     @test_approx_eq_eps new_error (error + derivative) 1e-10
 end
 
