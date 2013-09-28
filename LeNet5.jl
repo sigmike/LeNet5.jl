@@ -552,26 +552,26 @@ function test_derivative_of_error_with_respect_to_F6_weight()
     derivative = derivative_of_error_with_respect_to_F6_weight(network, desired_class, neuron_index, connection_index)
     @show derivative
 
-    #initial = copy(network.f6.output)
-    #show_derivative(-1:0.1:1, 0,
-    #    (value)->begin
-    #      for i in neuron_index:neuron_index #length(network.f6.output)
-    #        network.f6.output[i] = initial[i] + value
-    #      end
-    #      run(network.f6.output, network.output)
-    #    end,
-    #    ()->single_loss(network.output.output, desired_class),
-    #    ()->derivative_of_error_with_respect_of_f6_output(network, desired_class, neuron_index),
-    #)
+    initial = copy(network.f6.output)
+    show_derivative(-1:0.1:1, 0,
+        (value)->begin
+          for i in neuron_index:neuron_index length(network.f6.output)
+            network.f6.output[i] = initial[i] + value
+          end
+          run(network.f6.output, network.output)
+        end,
+        ()->single_loss(network.output.output, desired_class),
+        ()->derivative_of_error_with_respect_of_f6_output(network, desired_class, neuron_index),
+    )
 
-    #show_derivative(-1:0.1:1, 0,
-    #    (value)->begin
-    #        network.f6.weights[neuron_index, connection_index] = value
-    #        run(input, network)
-    #    end,
-    #    ()->weighted_sum(network.f6, network.c5.output, neuron_index),
-    #    ()->derivative_of_weighted_sum_with_respect_to_weight(network.f6, network.c5.output, neuron_index, connection_index),
-    #)
+    show_derivative(-1:0.1:1, 0,
+        (value)->begin
+            network.f6.weights[neuron_index, connection_index] = value
+            run(input, network)
+        end,
+        ()->weighted_sum(network.f6, network.c5.output, neuron_index),
+        ()->derivative_of_weighted_sum_with_respect_to_weight(network.f6, network.c5.output, neuron_index, connection_index),
+    )
 
     show_derivative(-1:0.1:1, 0,
         (value)->begin
@@ -583,12 +583,12 @@ function test_derivative_of_error_with_respect_to_F6_weight()
         ()->derivative_of_error_with_respect_to_F6_weight(network, desired_class, neuron_index, connection_index),
     )
 
-    #x = 0
-    #show_derivative(-1:0.1:1, 0,
-    #    (value)-> x = value,
-    #    ()->squash(x),
-    #    ()->derivative_of_squash(x),
-    #)
+    x = 0
+    show_derivative(-1:0.1:1, 0,
+        (value)-> x = value,
+        ()->squash(x),
+        ()->derivative_of_squash(x),
+    )
 
     change = 1.00
     network.f6.weights[neuron_index, connection_index] += change
