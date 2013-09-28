@@ -448,6 +448,9 @@ function derivative_of_weighted_sum_with_respect_to_weight(layer, input, neuron_
     corresponding_input = input[connection_index, 1, 1]
 end
 
+function derivative_of_squash(x)
+    A*(1 - tanh(S*x)^2) * S
+end
 
 function derivative_of_error_with_respect_to_F6_weight(input, network, desired_class, neuron_index, connection_index)
     run(input, network)
@@ -539,13 +542,20 @@ function test_derivative_of_error_with_respect_to_F6_weight()
     #    ()->derivative_of_weighted_sum_with_respect_to_weight(network.f6, network.c5.output, neuron_index, connection_index),
     #)
 
+    #show_derivative(-1:0.1:1, 0,
+    #    (value)->begin
+    #        network.f6.weights[neuron_index, connection_index] = value
+    #        run(input, network)
+    #    end,
+    #    ()->loss(reshape(network.output.output, 1, size(network.output.output)[1]), [desired_class]),
+    #    ()->derivative_of_error_with_respect_to_F6_weight(input, network, desired_class, neuron_index, connection_index),
+    #)
+
+    x = 0
     show_derivative(-1:0.1:1, 0,
-        (value)->begin
-            network.f6.weights[neuron_index, connection_index] = value
-            run(input, network)
-        end,
-        ()->loss(reshape(network.output.output, 1, size(network.output.output)[1]), [desired_class]),
-        ()->derivative_of_error_with_respect_to_F6_weight(input, network, desired_class, neuron_index, connection_index),
+        (value)-> x = value,
+        ()->squash(x),
+        ()->derivative_of_squash(x),
     )
 
     change = 1.00
