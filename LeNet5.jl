@@ -521,11 +521,9 @@ function show_derivative(range, value, setter, f, derivative_f)
         ys[i] = f()
         if xs[i] == 0
             derivative = derivative_f()
-            @show derivative
             t = [ys[i] + xx*derivative for xx in xs]
         end
     end
-    @show ys
 
     p = FramedPlot()
     add(p, Curve(xs, ys))
@@ -550,7 +548,7 @@ function test_derivative_of_error_with_respect_to_F6_weight()
     network.f6.weights[neuron_index, connection_index] = 0
 
     derivative = derivative_of_error_with_respect_to_F6_weight(network, desired_class, neuron_index, connection_index)
-    println(derivative)
+    @show derivative
 
     #initial = copy(network.f6.output)
     #show_derivative(-1:0.1:1, 0,
