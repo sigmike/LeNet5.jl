@@ -524,12 +524,14 @@ function show_derivative(range, value, setter, f, derivative_f)
     t = Nothing
     xs = range
     ys = zeros(length(xs))
+    done = false
     for i in 1:length(xs)
         setter(xs[i])
         ys[i] = f()
-        if xs[i] == 0
+        if xs[i] >= value && !done
             derivative = derivative_f()
-            t = [ys[i] + xx*derivative for xx in xs]
+            t = [ys[i] + (xx-value)*derivative for xx in xs]
+            done = true
         end
     end
 
