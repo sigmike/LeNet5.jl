@@ -405,10 +405,7 @@ end
 exp_minus_J = exp(-5)
 
 function single_loss(output, desired_class)
-  error = output[desired_class]
-  exp_output = map((x) -> exp(-x), output)
-  error += log(exp_minus_J + sum(exp_output))
-  error
+  output[desired_class]
 end
 
 function loss(outputs, desired_classes)
@@ -416,7 +413,10 @@ function loss(outputs, desired_classes)
     @assert size(outputs)[1] == training_samples
     errors = zeros(training_samples)
     for i in 1:training_samples
-        errors[i] += single_loss(reshape(outputs[i, :], size(outputs)[2]), desired_classes[i])
+        errors[i] += outputs[i, desired_classes[i]]
+        println("warning: still simplified loss function")
+        #exp_outputs = map((x) -> exp(-x), outputs[i,:])
+        #errors[i] += log(exp_minus_J + sum(exp_outputs))
     end
     mean(errors)
 end
@@ -478,22 +478,18 @@ function derivative_of_error_with_respect_to_f6_output(network, desired_class, n
     2*(network.f6.output[neuron_index] - desired_class_weights[neuron_index])
 end
 
-function output_weights(network, class)
-    reshape(network.output.weights[class,:,:], 84)
-end
-
 function derivative_of_error_with_respect_to_F6_weight(network, desired_class, neuron_index, connection_index)
     c5_output = network.c5.output
     f6_output = network.f6.output
     network_output = run(f6_output, network.output)
 
-    desired_class_weights = output_weights(network, desired_class)
+    desired_class_weights = reshape(network.output.weights[desired_class,:,:], 84)
 
     # Error is calculated on a single training set. In the PDF the error is the average error of multiple training sets.
     #
     # Error derivative calculation:
-    @test_approx_eq_eps single_loss(network_output, desired_class) (network_output[desired_class] + log(exp_minus_J + sum([exp(-network_output[i]) for i in 1:96]))) 1e-10
-    @test_approx_eq_eps single_loss(network_output, desired_class) (sum((f6_output - desired_class_weights).^2) + log(exp_minus_J + sum([exp(-sum((f6_output - output_weights(network, i)).^2)) for i in 1:96]))) 1e-10
+    # error = sum((f6_output - desired_class_weights).^2) ## Simplified !
+    @assert single_loss(network_output, desired_class) == sum((f6_output - desired_class_weights).^2)
     # derivative(error, w) = derivative(error, f6_output_of_neuron) * derivative(f6_output_of_neuron, neuron_weighted_sum) * derivative(neuron_weighted_sum, w)
     #
     # derivative(error, f6_output_on_neuron) = derivative((f6_output_on_neuron - desired_class_weights_on_neuron).^2, f6_output_on_neuron))
