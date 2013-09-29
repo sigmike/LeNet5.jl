@@ -292,8 +292,14 @@ function test_f6()
 
     output = run(input, layer)
     @test size(output) == (84,)
-    @test output[1] == squash(sum(input .* layer.weights[1]) + layer.biases[1])
-    @test output[79] == squash(sum(input .* layer.weights[79]) + layer.biases[79])
+    expected = 0
+    for i in 1:120
+        expected += input[i,1,1] * layer.weights[1,i]
+    end
+    expected += layer.biases[1]
+    expected = squash(expected)
+    @test output[1] == expected
+    @test output[79] == squash(sum(reshape(input,120) .* reshape(layer.weights[79,:],120)) + layer.biases[79])
 end
 
 type Output <: Layer
