@@ -676,7 +676,7 @@ function test_f6_backpropagation()
     weighted_sum = sum(c5_output .* layer.weights[neuron_index,:])
     bias = layer.biases[neuron_index]
 
-    weight_change = -learning_rate * sum(2(f6_output - desired_class_weights)) * (1 - tanh(weighted_sum + bias)^2) * corresponding_input
+    weight_change = -learning_rate * derivative_of_error_with_respect_to_F6_weight(network, desired_class, neuron_index, weight_index)
    
 
     initial_weight = network.f6.weights[neuron_index,weight_index]
@@ -687,7 +687,6 @@ function test_f6_backpropagation()
 end
 
 function test_all()
-    test_derivative_of_error_with_respect_to_F6_weight()
     test_c1()
     test_s2()
     test_c3()
@@ -699,6 +698,7 @@ function test_all()
     test_loss()
     test_loss_generic()
     test_f6_backpropagation()
+    test_derivative_of_error_with_respect_to_F6_weight()
 end
 
 end
