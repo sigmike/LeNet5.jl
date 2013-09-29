@@ -466,7 +466,7 @@ function derivative_of_squash(x)
     A*(1 - tanh(S*x)^2) * S
 end
 
-function derivative_of_error_with_respect_of_f6_output(network, desired_class, neuron_index)
+function derivative_of_error_with_respect_to_f6_output(network, desired_class, neuron_index)
     desired_class_weights = reshape(network.output.weights[desired_class,:,:], 84)
 
     2*(network.f6.output[neuron_index] - desired_class_weights[neuron_index])
@@ -506,10 +506,10 @@ function derivative_of_error_with_respect_to_F6_weight(network, desired_class, n
     println(bias)
     corresponding_input = c5_output[connection_index, 1, 1]
 
-    @show derivative_of_error_with_respect_of_f6_output(network, desired_class, neuron_index)
+    @show derivative_of_error_with_respect_to_f6_output(network, desired_class, neuron_index)
     @show derivative_of_squash(neuron_weighted_sum + bias)
     @show corresponding_input
-    derivative_of_error_with_respect_of_f6_output(network, desired_class, neuron_index) * derivative_of_squash(neuron_weighted_sum + bias) * corresponding_input
+    derivative_of_error_with_respect_to_f6_output(network, desired_class, neuron_index) * derivative_of_squash(neuron_weighted_sum + bias) * corresponding_input
 end
 
 using Winston
@@ -561,7 +561,7 @@ function test_derivative_of_error_with_respect_to_F6_weight()
           run(network.f6.output, network.output)
         end,
         ()->single_loss(network.output.output, desired_class),
-        ()->derivative_of_error_with_respect_of_f6_output(network, desired_class, neuron_index),
+        ()->derivative_of_error_with_respect_to_f6_output(network, desired_class, neuron_index),
     )
 
     p2 = show_derivative(-1:0.1:1, 0,
@@ -614,7 +614,7 @@ function test_derivative_of_error_with_respect_to_F6_weight()
             println(bias)
             corresponding_input = c5_output[connection_index, 1, 1]
 
-            @show derivative_of_error_with_respect_of_f6_output(network, desired_class, neuron_index)
+            @show derivative_of_error_with_respect_to_f6_output(network, desired_class, neuron_index)
             @show derivative_of_squash(neuron_weighted_sum + bias)
             @show corresponding_input
             (2*(network.f6.output[neuron_index] - desired_class_weights[neuron_index])) *
