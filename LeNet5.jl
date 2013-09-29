@@ -543,8 +543,7 @@ function show_derivative(range, value, setter, f, derivative_f)
     p
 end
 
-
-function test_derivative_of_error_with_respect_to_F6_weight()
+function display_derivatives()
     srand(123)
 
     input = rand(32, 32)
@@ -556,11 +555,6 @@ function test_derivative_of_error_with_respect_to_F6_weight()
 
     neuron_index = 1
     connection_index = 1
-
-    network.f6.weights[neuron_index, connection_index] = 0
-
-    derivative = derivative_of_error_with_respect_to_F6_weight(network, desired_class, neuron_index, connection_index)
-    @show derivative
 
     initial = copy(network.f6.output)
     p1 = show_derivative(-1:0.1:1, 0,
@@ -645,13 +639,31 @@ function test_derivative_of_error_with_respect_to_F6_weight()
     tf[1,1] = table
     tf[2,1] = table2
     Winston.display(tf)
+end
 
-    change = 0.01 
+
+function test_derivative_of_error_with_respect_to_F6_weight()
+    srand(123)
+
+    input = rand(32, 32)
+    desired_class = 2
+
+    network = NeuralNetwork()
+    output = run(input, network)
+    error = single_loss(output, desired_class)
+
+    neuron_index = 1
+    connection_index = 1
+
+    derivative = derivative_of_error_with_respect_to_F6_weight(network, desired_class, neuron_index, connection_index)
+    @show derivative
+
+    change = 0.000001 
     network.f6.weights[neuron_index, connection_index] += change
 
     new_output = run(input, network)
     new_error = single_loss(new_output, desired_class)
-    @test_approx_eq_eps new_error (error + derivative) 1e-2
+    @test_approx_eq_eps derivative ((new_error - error) / change) 1e-8
 end
 
 function test_f6_backpropagation()
