@@ -413,7 +413,7 @@ function maximum_a_posteriori(network)
 end
 
 function derivative_of_maximum_a_posteriori_with_respect_to_f6_weight(network, neuron_index, connection_index)
-    network.c5.output[connection_index,1,1]
+    1
     #exp_minus_output = map((x) -> exp(-x), network.output.output)
     #f = exp_minus_J + sum(exp_minus_output)
     #-(
@@ -426,8 +426,8 @@ end
 function test_derivative_of_maximum_a_posteriori_with_respect_to_f6_weight()
     srand(123)
     network = NeuralNetwork()
-    network.c5.output = ones(120,1,1)
-    fill!(network.output.weights, 0)
+    fill!(network.c5.output, 0.9)
+    fill!(network.output.weights, 0.1)
 
     run(network.c5.output, network.f6)
     run(network.f6.output, network.output)
