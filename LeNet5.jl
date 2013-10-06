@@ -404,10 +404,13 @@ end
 
 exp_minus_J = exp(-5)
 
-function single_loss(output, desired_class)
-  error = output[desired_class]
+function maximum_a_posteriori(output)
   exp_output = map((x) -> exp(-x), output)
-  error += log(exp_minus_J + sum(exp_output))
+  log(exp_minus_J + sum(exp_output))
+end
+
+function single_loss(output, desired_class)
+  error = output[desired_class] + maximum_a_posteriori(output)
   error
 end
 
