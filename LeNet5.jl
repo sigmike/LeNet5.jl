@@ -405,8 +405,13 @@ end
 exp_minus_J = exp(-5)
 
 function maximum_a_posteriori(output)
+    @show output
   exp_output = map((x) -> exp(-x), output)
   log(exp_minus_J + sum(exp_output))
+end
+
+function derivative_of_maximum_a_posteriori_with_respect_to_f6_weight(output, neuron_index, connection_index)
+    0
 end
 
 function test_derivative_of_maximum_a_posteriori_with_respect_to_f6_weight()
@@ -416,17 +421,18 @@ function test_derivative_of_maximum_a_posteriori_with_respect_to_f6_weight()
     output = run(input, network)
     first_result = maximum_a_posteriori(output)
 
-    neuron_index = 1
-    connection_index = 1
+    neuron_index = 2
+    connection_index = 5
 
     derivative = derivative_of_maximum_a_posteriori_with_respect_to_f6_weight(output, neuron_index, connection_index)
     @show derivative
 
-    change = 0.000001
+    change = 1
     network.f6.weights[neuron_index, connection_index] += change
     new_output = run(input, network)
     new_result = maximum_a_posteriori(output)
 
+    @show ((new_result - first_result) / change)
     @test_approx_eq_eps derivative ((new_result - first_result) / change) 1e-8
 end
 
