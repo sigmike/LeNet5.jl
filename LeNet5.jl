@@ -267,9 +267,10 @@ type F6 <: Layer
     weights
     biases
 
+    weighted_sum
     output
 end
-F6() = F6(random_weight(120, 84, 120), random_weight(120, 84), zeros(84))
+F6() = F6(random_weight(120, 84, 120), random_weight(120, 84), zeros(84), zeros(84))
 
 function parameters(layer::F6)
     [layer.weights..., layer.biases...]
@@ -277,7 +278,8 @@ end
 
 function run(input, layer::F6)
     for i in 1:84
-        layer.output[i] = squash(sum(reshape(input,120) .* reshape(layer.weights[i,:],120)) + layer.biases[i])
+        layer.weighted_sum[i] = sum(reshape(input,120) .* reshape(layer.weights[i,:],120)) + layer.biases[i]
+        layer.output[i] = squash(layer.weighted_sum[i])
     end
     layer.output
 end
@@ -412,8 +414,24 @@ function maximum_a_posteriori(output)
   log(exp_minus_J + sum(exp_output))
 end
 
-function derivative_of_maximum_a_posteriori_with_respect_to_f6_weight(output, neuron_index, connection_index)
-    0
+function derivative_of_output_with_respect_to_f6_weight(network, neuron_index, connection_index)
+    derivative_of_squash(network.f6.weighted_sum[neuron_index]) * network.c5.output[connection_index]
+end
+
+function derivative_of_exp_minus_output_with_respect_to_f6_weight(network, neuron_index, connection_index)
+    result = 0.0
+    for k in 1:length(network.output.output)
+        x = -exp(-network.output.output[k])
+        x *= derivative_of_output_with_respect_to_f6_weight(network, neuron_index, connection_index)
+        result += x
+    end
+    result
+end
+
+function derivative_of_maximum_a_posteriori_with_respect_to_f6_weight(network, neuron_index, connection_index)
+    exp_minus_output = map((x) -> exp(-x), network.output.output)
+    f = exp_minus_J + sum(exp_minus_output)
+    1/f * derivative_of_exp_minus_output_with_respect_to_f6_weight(network, neuron_index, connection_index)
 end
 
 function test_derivative_of_maximum_a_posteriori_with_respect_to_f6_weight()
@@ -430,7 +448,7 @@ function test_derivative_of_maximum_a_posteriori_with_respect_to_f6_weight()
     neuron_index = 1
     connection_index = 1
 
-    derivative = derivative_of_maximum_a_posteriori_with_respect_to_f6_weight(network.output.output, neuron_index, connection_index)
+    derivative = derivative_of_maximum_a_posteriori_with_respect_to_f6_weight(network, neuron_index, connection_index)
     @show derivative
 
     change = 0.0001
@@ -449,7 +467,7 @@ function test_derivative_of_maximum_a_posteriori_with_respect_to_f6_weight()
             run(network.f6.output, network.output)
         end,
         ()->maximum_a_posteriori(network.output.output),
-        ()->derivative_of_maximum_a_posteriori_with_respect_to_f6_weight(network.output.output, neuron_index, connection_index),
+        ()->derivative_of_maximum_a_posteriori_with_respect_to_f6_weight(network, neuron_index, connection_index),
     )
     Winston.display(p)
 
