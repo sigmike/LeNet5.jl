@@ -329,6 +329,8 @@ function Output()
     Output(weights, zeros(96))
 end
 
+flat_weights(layer::Output) = reshape(layer.weights, 96, 12*7)
+
 function run(input, layer::Output)
     fill!(layer.output, 0)
     for i in 1:96
@@ -406,14 +408,24 @@ end
 
 exp_minus_J = exp(-0.01)
 
+N(layer) = length(layer.output)
+
 function maximum_a_posteriori(network)
-    sum(network.f6.output)
+    result = 0
+    output_weights = flat_weights(network.output)
+
+    for i in 1:N(network.output)
+        for j in 1:N(network.f6)
+            result += network.f6.output[j] - output_weights[i,j]
+        end
+    end
+    result
     #exp_output = map((x) -> exp(-x), output)
     #log(exp_minus_J + sum(exp_output))
 end
 
 function derivative_of_maximum_a_posteriori_with_respect_to_f6_weight(network, neuron_index, connection_index)
-    derivative_of_squash(network.f6.weighted_sum[neuron_index]) * network.c5.output[connection_index,1,1]
+    N(network.output) * derivative_of_squash(network.f6.weighted_sum[neuron_index]) * network.c5.output[connection_index,1,1]
     #exp_minus_output = map((x) -> exp(-x), network.output.output)
     #f = exp_minus_J + sum(exp_minus_output)
     #-(
