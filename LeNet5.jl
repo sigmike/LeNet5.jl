@@ -413,10 +413,11 @@ N(layer) = length(layer.output)
 function maximum_a_posteriori(network)
     result = 0
     output_weights = flat_weights(network.output)
+    @show size(output_weights)
 
     for i in 1:N(network.output)
         for j in 1:N(network.f6)
-            result += network.f6.output[j] - output_weights[i,j]
+            result += (network.f6.output[j] - output_weights[i,j]) ^ 2
         end
     end
     result
@@ -425,7 +426,15 @@ function maximum_a_posteriori(network)
 end
 
 function derivative_of_maximum_a_posteriori_with_respect_to_f6_weight(network, neuron_index, connection_index)
-    N(network.output) * derivative_of_squash(network.f6.weighted_sum[neuron_index]) * network.c5.output[connection_index,1,1]
+    result = 0
+    output_weights = flat_weights(network.output)
+
+    for i in 1:N(network.output)
+        for j in 1:N(network.f6)
+            result += 2*(network.f6.output[j] - output_weights[i,j]) * derivative_of_squash(network.f6.weighted_sum[j]) * network.c5.output[connection_index,1,1]
+        end
+    end
+    result
     #exp_minus_output = map((x) -> exp(-x), network.output.output)
     #f = exp_minus_J + sum(exp_minus_output)
     #-(
