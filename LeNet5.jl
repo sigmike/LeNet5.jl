@@ -404,7 +404,7 @@ function test_lenet5()
     @test output == expected_output
 end
 
-exp_minus_J = exp(-0.000000001)
+exp_minus_J = exp(-0.01)
 
 function maximum_a_posteriori(output)
   exp_output = map((x) -> exp(-x), output)
@@ -413,16 +413,6 @@ end
 
 function derivative_of_output_with_respect_to_f6_weight(network, neuron_index, connection_index)
     derivative_of_squash(network.f6.weighted_sum[neuron_index]) * network.c5.output[connection_index]
-end
-
-function derivative_of_exp_minus_output_with_respect_to_f6_weight(network, neuron_index, connection_index)
-    result = 0.0
-    for k in 1:length(network.output.output)
-        x = -exp(-network.output.output[k])
-        x *= derivative_of_output_with_respect_to_f6_weight(network, neuron_index, connection_index)
-        result += x
-    end
-    result
 end
 
 function derivative_of_maximum_a_posteriori_with_respect_to_f6_weight(network, neuron_index, connection_index)
