@@ -407,7 +407,7 @@ end
 exp_minus_J = exp(-0.01)
 
 function maximum_a_posteriori(network)
-    sum((x) -> squash(x), network.f6.weighted_sum)
+    sum(network.f6.output)
     #exp_output = map((x) -> exp(-x), output)
     #log(exp_minus_J + sum(exp_output))
 end
