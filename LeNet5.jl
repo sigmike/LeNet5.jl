@@ -413,7 +413,6 @@ function maximum_a_posteriori(output)
 end
 
 function derivative_of_maximum_a_posteriori_with_respect_to_f6_weight(output, neuron_index, connection_index)
-    # maximum_a_posteriori = log(exp_minus_J + sum(map((x) -> exp(-x), output)))
     0
 end
 
