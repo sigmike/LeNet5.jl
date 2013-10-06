@@ -456,7 +456,7 @@ function test_derivative_of_maximum_a_posteriori_with_respect_to_f6_weight()
     derivative = derivative_of_maximum_a_posteriori_with_respect_to_f6_weight(network, neuron_index, connection_index)
     @show derivative
 
-    change = 0.000001
+    change = 0.00001
     @show network.f6.weights[neuron_index, connection_index]
     network.f6.weights[neuron_index, connection_index] += change
 
@@ -479,7 +479,7 @@ function test_derivative_of_maximum_a_posteriori_with_respect_to_f6_weight()
 
 
     @show ((new_result - first_result) / change)
-    @test_approx_eq_eps derivative ((new_result - first_result)) 1e-8
+    @test_approx_eq_eps derivative ((new_result - first_result) / change) 1e-3
 end
 
 function single_loss(output, desired_class)
