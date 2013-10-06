@@ -431,7 +431,11 @@ end
 function derivative_of_maximum_a_posteriori_with_respect_to_f6_weight(network, neuron_index, connection_index)
     exp_minus_output = map((x) -> exp(-x), network.output.output)
     f = exp_minus_J + sum(exp_minus_output)
-    1/f * derivative_of_exp_minus_output_with_respect_to_f6_weight(network, neuron_index, connection_index)
+    (
+      derivative_of_squash(network.f6.weighted_sum[neuron_index]) *
+      network.c5.output[connection_index,1,1] *
+      sum(exp_minus_output)
+    ) / (2*f)
 end
 
 function test_derivative_of_maximum_a_posteriori_with_respect_to_f6_weight()
