@@ -407,13 +407,13 @@ end
 exp_minus_J = exp(-0.01)
 
 function maximum_a_posteriori(network)
-    sum(network.f6.weighted_sum)
+    sum((x) -> squash(x), network.f6.weighted_sum)
     #exp_output = map((x) -> exp(-x), output)
     #log(exp_minus_J + sum(exp_output))
 end
 
 function derivative_of_maximum_a_posteriori_with_respect_to_f6_weight(network, neuron_index, connection_index)
-    network.c5.output[connection_index,1,1]
+    derivative_of_squash(network.f6.weighted_sum[neuron_index]) * network.c5.output[connection_index,1,1]
     #exp_minus_output = map((x) -> exp(-x), network.output.output)
     #f = exp_minus_J + sum(exp_minus_output)
     #-(
