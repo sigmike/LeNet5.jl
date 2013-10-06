@@ -409,6 +409,27 @@ function maximum_a_posteriori(output)
   log(exp_minus_J + sum(exp_output))
 end
 
+function test_derivative_of_maximum_a_posteriori_with_respect_to_f6_weight()
+    srand(123)
+    input = rand(32, 32)
+    network = NeuralNetwork()
+    output = run(input, network)
+    first_result = maximum_a_posteriori(output)
+
+    neuron_index = 1
+    connection_index = 1
+
+    derivative = derivative_of_maximum_a_posteriori_with_respect_to_f6_weight(output, neuron_index, connection_index)
+    @show derivative
+
+    change = 0.000001
+    network.f6.weights[neuron_index, connection_index] += change
+    new_output = run(input, network)
+    new_result = maximum_a_posteriori(output)
+
+    @test_approx_eq_eps derivative ((new_result - first_result) / change) 1e-8
+end
+
 function single_loss(output, desired_class)
   error = output[desired_class] + maximum_a_posteriori(output)
   error
