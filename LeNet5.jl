@@ -402,11 +402,13 @@ function test_lenet5()
     @test output == expected_output
 end
 
-exp_minus_J = exp(-5)
+exp_minus_J = exp(-0.000000001)
 
 function maximum_a_posteriori(output)
     @show output
   exp_output = map((x) -> exp(-x), output)
+  @show sum(exp_output)
+
   log(exp_minus_J + sum(exp_output))
 end
 
@@ -416,21 +418,28 @@ end
 
 function test_derivative_of_maximum_a_posteriori_with_respect_to_f6_weight()
     srand(123)
-    input = rand(32, 32)
     network = NeuralNetwork()
-    output = run(input, network)
-    first_result = maximum_a_posteriori(output)
+    network.c5.output = ones(120,1,1)
+    fill!(network.output.weights, 0)
 
-    neuron_index = 2
-    connection_index = 5
+    run(network.c5.output, network.f6)
+    run(network.f6.output, network.output)
+    first_result = maximum_a_posteriori(network.output.output)
+    @show first_result
 
-    derivative = derivative_of_maximum_a_posteriori_with_respect_to_f6_weight(output, neuron_index, connection_index)
+    neuron_index = 1
+    connection_index = 1
+
+    derivative = derivative_of_maximum_a_posteriori_with_respect_to_f6_weight(network.output.output, neuron_index, connection_index)
     @show derivative
 
-    change = 1
+    change = 0.0001
     network.f6.weights[neuron_index, connection_index] += change
-    new_output = run(input, network)
-    new_result = maximum_a_posteriori(output)
+
+    run(network.c5.output, network.f6)
+    run(network.f6.output, network.output)
+    new_result = maximum_a_posteriori(network.output.output)
+    @show new_result
 
     @show ((new_result - first_result) / change)
     @test_approx_eq_eps derivative ((new_result - first_result) / change) 1e-8
