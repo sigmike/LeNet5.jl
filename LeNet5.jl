@@ -351,6 +351,16 @@ function test_output()
     @test_approx_eq_eps output[21] sum((input - reshape(layer.weights[21,:,:], 84)).^2) 1e-10
 end
 
+function test_precise_output()
+    srand(123)
+    input = ones(84)
+    layer = Output()
+
+    output = run(input, layer)
+    @test size(output) == (96,)
+    @test_approx_eq_eps output[ 2] ((7*12-18)*4 + (18*0)) 1e-10
+end
+
 type NeuralNetwork <: Layer
     c1
     s2
