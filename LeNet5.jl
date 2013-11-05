@@ -9,9 +9,9 @@ valid_weight(w::Number, inputs) = (max = 2.4/inputs; w <= max && w >= -max)
 valid_weight(w::Array, inputs) = (max = 2.4/inputs; all((x) -> valid_weight(x, inputs), w) && abs(std(w) - max / 2) <= 0.2 )
 
 # lecun-98 p.8 and 41
+const A = 1.7159
+const S = 2 / 3
 function squash(a)
-    A = 1.7159
-    S = 2 / 3
     A * tanh(S * a)
 end
 @test_approx_eq_eps 1.0 squash(1) 1e-5
