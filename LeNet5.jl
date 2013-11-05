@@ -405,14 +405,22 @@ end
 
 exp_minus_J = exp(-5)
 
+function maximum_a_posteriori(output)
+    exp_output = map((x) -> exp(-x), output)
+    log(exp_minus_J + sum(exp_output))
+end
+
+function single_loss(output, desired_class)
+  error = output[desired_class] + maximum_a_posteriori(output)
+  error
+end
+
 function loss(outputs, desired_classes)
     training_samples = length(desired_classes)
     @assert size(outputs)[1] == training_samples
     errors = zeros(training_samples)
     for i in 1:training_samples
-        errors[i] += outputs[i, desired_classes[i]]
-        exp_outputs = map((x) -> exp(-x), outputs[i,:])
-        errors[i] += log(exp_minus_J + sum(exp_outputs))
+        errors[i] += single_loss(reshape(outputs[i, :], size(outputs)[2]), desired_classes[i])
     end
     mean(errors)
 end
